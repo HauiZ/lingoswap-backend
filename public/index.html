@@ -1,0 +1,58 @@
+<!-- public/index.html - File tĩnh ví dụ -->
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LingoSwap API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .info {
+            background-color: #e8f4f8;
+            padding: 20px;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+        .api-endpoints {
+            background-color: #f9f9f9;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+        code {
+            background-color: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>🌐 LingoSwap API Backend</h1>
+    <div class="info">
+        <p>Chào mừng đến LingoSwap - Nền tảng trao đổi ngôn ngữ trực tuyến!</p>
+        <p>API đang chạy tại: <code>http://localhost:5000</code></p>
+    </div>
+    
+    <div class="api-endpoints">
+        <h2>📚 Các Endpoints chính:</h2>
+        <ul>
+            <li><code>GET /api/users</code> - Lấy tất cả users</li>
+            <li><code>GET /api/users/:id</code> - Lấy user theo ID</li>
+            <li><code>POST /api/users</code> - Tạo user mới</li>
+            <li><code>PUT /api/users/:id</code> - Cập nhật user</li>
+            <li><code>DELETE /api/users/:id</code> - Xóa user</li>
+        </ul>
+    </div>
+</body>
+</html>

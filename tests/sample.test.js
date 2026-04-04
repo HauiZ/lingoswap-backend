@@ -6,16 +6,16 @@
   Chạy: npm test
 */
 
-const request = require('supertest');
-const app = require('../src/app');
+import request from 'supertest';
+import app from '../src/app.js';
 
 describe('API Tests', () => {
-  
+
   test('GET / - Phải trả về 200 và message', async () => {
     const response = await request(app)
       .get('/')
       .expect(200);
-    
+
     expect(response.body).toHaveProperty('message');
   });
 
@@ -23,7 +23,7 @@ describe('API Tests', () => {
     const response = await request(app)
       .get('/api/users')
       .expect(200);
-    
+
     expect(Array.isArray(response.body)).toBe(true);
   });
 
@@ -37,7 +37,7 @@ describe('API Tests', () => {
       .post('/api/users')
       .send(newUser)
       .expect(201);
-    
+
     expect(response.body).toHaveProperty('id');
     expect(response.body.name).toBe('Test User');
   });

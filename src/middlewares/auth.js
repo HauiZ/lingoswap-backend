@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { env } from '../config/env.js';
+import env from '../config/env.js';
 
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
@@ -12,6 +12,9 @@ const authenticateToken = (req, res, next) => {
   jwt.verify(token, env.JWT_SECRET, (err, user) => {
     if (err) {
       return res.status(403).json({ error: 'Token không hợp lệ' });
+    }
+    if (user.statusAccount === 'banned') {
+      return res.status(403).json({ error: 'Tài khoản đã bị khóa' });
     }
     req.user = user;
     next();

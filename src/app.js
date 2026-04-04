@@ -1,4 +1,3 @@
-// src/app.js - Cấu hình express app
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import path from 'path';
@@ -8,6 +7,8 @@ import connectDB from './config/database.js';
 import userRoutes from './routes/user.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import adminRoutes from './routes/admin.routes.js';
+import conversationRoutes from './routes/conversation.routes.js';
+import friendRoutes from './routes/friend.routes.js';
 import errorHandler from './middlewares/errorHandler.js';
 
 import { fileURLToPath } from 'url';
@@ -42,9 +43,11 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/user/conversations', conversationRoutes);
+app.use('/api/user/friends', friendRoutes);
 
 // Home route
-connectDB();
+
 app.get('/', (req, res) => {
   res.json({
     message: 'Chào mừng đến LingoSwap API!',
@@ -59,6 +62,6 @@ app.use((req, res) => {
 
 // Error handler
 app.use(errorHandler);
-
+connectDB();
 export default app;
 

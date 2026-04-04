@@ -28,8 +28,10 @@ export const handleChatProvider = (io, socket) => {
                 type
             });
 
-            conversation.lastMessageAt = Date.now();
-            await conversation.save();
+            await Conversation.findByIdAndUpdate(conversation._id, {
+                lastMessage: newMessage._id,
+                updatedAt: Date.now()
+            });
 
             const partnerSocketId = await redis.get(`socket:${partnerId}`);
 

@@ -1,30 +1,29 @@
-// src/models/OTP.js - Schema quản lý mã xác thực
 import mongoose from 'mongoose';
 
 const otpSchema = new mongoose.Schema(
   {
-    email: { 
-      type: String, 
+    email: {
+      type: String,
       required: true,
       lowercase: true,
       trim: true
     },
-    otpCode: { 
-      type: String, 
-      required: true 
+    otpCode: {
+      type: String,
+      required: true
     },
-    type: { 
-      type: String, 
-      enum: ['register', 'forgot_password'], 
-      required: true 
+    type: {
+      type: String,
+      enum: ['register', 'forgot_password'],
+      required: true
     },
-    expiresAt: { 
-      type: Date, 
-      required: true 
+    expiresAt: {
+      type: Date,
+      required: true
     },
-    isUsed: { 
-      type: Boolean, 
-      default: false 
+    isUsed: {
+      type: Boolean,
+      default: false
     }
   },
   {

@@ -1,4 +1,3 @@
-
 import swaggerJsdoc from 'swagger-jsdoc';
 
 const swaggerDefinition = {

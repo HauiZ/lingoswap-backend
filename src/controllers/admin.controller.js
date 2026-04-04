@@ -1,4 +1,3 @@
-// src/controllers/admin.controller.js - Xử lý logic dành riêng cho Admin
 import User from '../models/User.js';
 import logger from '../utils/logger.js';
 
@@ -18,16 +17,16 @@ const getAllUsers = async (req, res) => {
 const banUser = async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     const user = await User.findById(id);
     if (!user) {
       return res.status(404).json({ error: 'Người dùng không tồn tại' });
     }
 
     // Đổi trạng thái thành banned
-    user.status = 'banned';
+    user.statusAccount = 'banned';
     await user.save();
-    
+
     logger.log(`Admin đã khóa (ban) user ID: ${id}`);
     res.json({ message: 'Đã khóa tài khoản người dùng do vi phạm', user: await User.findById(id).select('-password -__v') });
   } catch (error) {
@@ -40,10 +39,10 @@ const banUser = async (req, res) => {
 const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     logger.log(`Admin yêu cầu xóa user ID: ${id}`);
     const deletedUser = await User.findByIdAndDelete(id);
-    
+
     if (!deletedUser) {
       return res.status(404).json({ error: 'Người dùng không tồn tại' });
     }

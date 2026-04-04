@@ -1,4 +1,3 @@
-// src/controllers/user.controller.js - Xử lý logic user cá nhân
 import User from '../models/User.js';
 import logger from '../utils/logger.js';
 

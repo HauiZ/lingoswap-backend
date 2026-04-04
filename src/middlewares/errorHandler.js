@@ -1,4 +1,3 @@
-// src/middlewares/errorHandler.js - Middleware xử lý lỗi chung
 import logger from '../utils/logger.js';
 
 const errorHandler = (err, req, res, next) => {

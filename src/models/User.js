@@ -1,4 +1,3 @@
-// src/models/User.js - Schema User cho MongoDB
 import mongoose from 'mongoose';
 
 const userSchema = new mongoose.Schema(
@@ -54,7 +53,7 @@ const userSchema = new mongoose.Schema(
     },
 
     role: { type: String, enum: ['user', 'admin'], default: 'user' },
-    status: { type: String, enum: ['active', 'warned', 'banned'], default: 'active' },
+    statusAccount: { type: String, enum: ['active', 'warned', 'banned'], default: 'active' },
 
     lastOnlineAt: { type: Date }
   },
@@ -65,7 +64,6 @@ const userSchema = new mongoose.Schema(
 
 // Index để tìm kiếm nhanh
 userSchema.index({ email: 1 });
-userSchema.index({ 'profile.nativeLanguage': 1, 'profile.targetLanguage': 1 }); // Phục vụ matching
 userSchema.index({ status: 1 });
 
 // Tránh trả về password và provider dữ liệu nội bộ khi query

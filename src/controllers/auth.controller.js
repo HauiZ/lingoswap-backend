@@ -1,9 +1,8 @@
-// src/controllers/authController.js - Xử lý logic đăng nhập/đăng ký
 import User from '../models/User.js';
 import OTP from '../models/OTP.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { env } from '../config/env.js';
+import env from '../config/env.js';
 import sendEmail from '../utils/sendEmail.js';
 import logger from '../utils/logger.js';
 import { validatePassword, validateEmail, validateUsername } from '../utils/validators.js';
@@ -78,6 +77,9 @@ const login = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (user && user.password && (await bcrypt.compare(password, user.password))) {
+      if (user.statusAccount === 'banned') {
+        return res.status(403).json({ error: 'Tài khoản đã bị khóa' });
+      }
       sendTokenResponse(user, 200, res);
       logger.log(`User đăng nhập: ${user.email}`);
     } else {

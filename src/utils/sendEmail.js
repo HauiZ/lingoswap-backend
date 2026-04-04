@@ -1,27 +1,22 @@
-// src/utils/sendEmail.js - Tiện ích gửi email
 import nodemailer from 'nodemailer';
 
 const sendEmail = async (options) => {
-  // 1) Tạo một transporter (sử dụng tài khoản gmail hoặc dịch vụ khác để gửi)
-  // Lưu ý: Cần thêm EMAIL_USERNAME và EMAIL_PASSWORD vào .env
   const transporter = nodemailer.createTransport({
-    service: 'gmail', // Hoặc sử dụng host/port của SMTP server khác
+    service: 'gmail',
     auth: {
-      user: process.env.EMAIL_USERNAME || 'test@example.com',
-      pass: process.env.EMAIL_PASSWORD || 'password',
+      user: process.env.EMAIL_USERNAME,
+      pass: process.env.EMAIL_PASSWORD,
     },
   });
 
-  // 2) Định nghĩa cấu hình email
   const mailOptions = {
     from: 'LingoSwap <noreply@lingoswap.com>',
     to: options.email,
     subject: options.subject,
     text: options.message,
-    html: options.html, // Hỗ trợ gửi template HTML
+    html: options.html,
   };
 
-  // 3) Thực hiện gửi email
   await transporter.sendMail(mailOptions);
 };
 

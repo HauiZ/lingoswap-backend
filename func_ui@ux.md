@@ -17,6 +17,15 @@ Nhóm B: Hệ thống Ghép cặp (Matching System)
 Lọc đối tác: Tìm người theo cặp ngôn ngữ.
 Hàng chờ thông minh: Tự động ghép cặp những người đang trực tuyến.
 
+Mô phỏng luồng hoạt động (Sequence)
+Client A: Gửi POST /match/join (API) -> Server lưu A vào Queue (Redis/DB).
+Client A: socket.join('queue_English') -> Chờ đợi.
+Client B: Gửi POST /match/join -> Server kiểm tra Queue thấy có A đang đợi.
+Server: * Tạo MatchSession trong MongoDB.
+    Xóa A và B khỏi Queue.
+    Socket: io.to(A).emit('found') và io.to(B).emit('found').
+Client A & B: Nhận sự kiện, chuyển hướng sang màn hình Call.
+
 Nhóm C: Giao tiếp thời gian thực (Real-time Communication)
 Video Call: Giao tiếp Face-to-Face qua WebRTC, hỗ trợ bật/tắt Cam và Mic.
 Gợi ý TOpic để giao tiếp: dựa trên sở thích hoặc ngẫu nhiên.

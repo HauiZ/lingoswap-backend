@@ -3,36 +3,41 @@ import mongoose from 'mongoose';
 
 const userSchema = new mongoose.Schema(
   {
-    email: { 
-      type: String, 
-      required: true, 
+    email: {
+      type: String,
+      required: true,
       unique: true,
       lowercase: true,
       trim: true
     },
-    password: { 
+    password: {
       type: String,
       minlength: 6,
     }, // Nullable nếu đăng nhập qua MXH
-    authProvider: { 
-      type: String, 
-      enum: ['local', 'google', 'facebook'], 
-      default: 'local' 
+    authProvider: {
+      type: String,
+      enum: ['local', 'google', 'facebook'],
+      default: 'local'
     },
     providerId: { type: String }, // Lưu ID của Google/Facebook
-    
+
     // Hồ sơ cá nhân
     profile: {
       fullName: { type: String, required: true, trim: true },
       avatar: { type: String, default: 'default_avatar.png' },
       bio: { type: String, maxLength: 500, default: '' },
-      nativeLanguage: { type: String, required: true }, // VD: 'vi', 'en'
-      targetLanguage: { type: String, required: true },
-      proficiencyLevel: { 
-        type: String, 
+      language: { type: String, required: true }, // VD: 'vi', 'en'
+      proficiencyLevel: {
+        type: String,
         enum: ['Beginner', 'Intermediate', 'Advanced'],
         required: true
       }
+    },
+
+    status: {
+      type: String,
+      enum: ['offline', 'online', 'waiting', 'in-call'],
+      default: 'offline'
     },
 
     // Cấu hình cá nhân
@@ -50,7 +55,7 @@ const userSchema = new mongoose.Schema(
 
     role: { type: String, enum: ['user', 'admin'], default: 'user' },
     status: { type: String, enum: ['active', 'warned', 'banned'], default: 'active' },
-    
+
     lastOnlineAt: { type: Date }
   },
   {

@@ -9,8 +9,8 @@ const generateAccessToken = (id, role) => {
 };
 
 const generateRefreshToken = (id, role) => {
-    return jwt.sign({ id, role }, config.JWT_REFRESH_SECRET, {
-        expiresIn: config.JWT_REFRESH_EXPIRE,
+    return jwt.sign({ id, role }, env.JWT_REFRESH_SECRET, {
+        expiresIn: env.JWT_REFRESH_EXPIRE,
     });
 };
 

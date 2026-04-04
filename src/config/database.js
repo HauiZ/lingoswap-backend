@@ -1,4 +1,4 @@
-// src/config/database.js - Cấu hình kết nối database
+
 import mongoose from 'mongoose';
 import { env } from './env.js';
 

@@ -1,4 +1,3 @@
-// src/routes/user.routes.js - Định nghĩa endpoints user cá nhân
 import express from 'express';
 const router = express.Router();
 import { getMyProfile, getUserById, updateMyProfile, uploadAvatar } from '../controllers/user.controller.js';

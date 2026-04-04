@@ -20,8 +20,7 @@ import { authenticateToken } from '../middlewares/auth.js';
  *               - email
  *               - password
  *               - fullName
- *               - nativeLanguage
- *               - targetLanguage
+ *               - language
  *               - proficiencyLevel
  *             properties:
  *               email:
@@ -30,12 +29,9 @@ import { authenticateToken } from '../middlewares/auth.js';
  *                 type: string
  *               fullName:
  *                 type: string
- *               nativeLanguage:
+ *               language:
  *                 type: string
  *                 example: "vi"
- *               targetLanguage:
- *                 type: string
- *                 example: "en"
  *               proficiencyLevel:
  *                 type: string
  *                 enum: ['Beginner', 'Intermediate', 'Advanced']

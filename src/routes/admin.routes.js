@@ -1,10 +1,8 @@
-// src/routes/admin.routes.js - Định nghĩa endpoints quản trị viên
 import express from 'express';
 const router = express.Router();
 import { getAllUsers, banUser, deleteUser } from '../controllers/admin.controller.js';
 import { authenticateToken, authorizeRoles } from '../middlewares/auth.js';
 
-// Áp dụng middleware admin cho toàn bộ các route trong router này
 router.use(authenticateToken, authorizeRoles('admin'));
 
 /**

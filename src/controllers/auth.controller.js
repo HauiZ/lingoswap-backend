@@ -10,15 +10,16 @@ import { validatePassword, validateEmail, validateUsername } from '../utils/vali
 import { generateAccessToken, generateRefreshToken } from '../utils/generateToken.js';
 import { OAuth2Client } from 'google-auth-library';
 import axios from 'axios';
+import sendTokenResponse from '../helper/sendTokenResponse.js';
 
 const googleClient = new OAuth2Client(env.GOOGLE_CLIENT_ID);
 
 // Đăng ký người dùng mới
 const register = async (req, res) => {
   try {
-    const { email, password, fullName, nativeLanguage, targetLanguage, proficiencyLevel } = req.body;
+    const { email, password, fullName, language, proficiencyLevel } = req.body;
 
-    if (!email || !password || !fullName || !nativeLanguage || !targetLanguage || !proficiencyLevel) {
+    if (!email || !password || !fullName || !language || !proficiencyLevel) {
       return res.status(400).json({ error: 'Vui lòng cung cấp đầy đủ thông tin bắt buộc' });
     }
 
@@ -52,8 +53,7 @@ const register = async (req, res) => {
       password: hashedPassword,
       profile: {
         fullName,
-        nativeLanguage,
-        targetLanguage,
+        language,
         proficiencyLevel
       }
     });

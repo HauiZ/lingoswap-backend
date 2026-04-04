@@ -1,4 +1,4 @@
-// src/config/swagger.js - Cấu hình Swagger API Documentation
+
 import swaggerJsdoc from 'swagger-jsdoc';
 
 const swaggerDefinition = {

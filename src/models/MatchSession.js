@@ -1,22 +1,26 @@
-// src/models/MatchSession.js - Schema phiên ghép cặp và gọi Video
 import mongoose from 'mongoose';
 
 const matchSessionSchema = new mongoose.Schema(
   {
-    participants: [{ 
-      type: mongoose.Schema.Types.ObjectId, 
-      ref: 'User' 
-    }], // Mảng 2 người dùng
-    suggestedTopic: { 
+    participants: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+    }],
+    language: {
+      type: String,
+      required: true
+    },
+    suggestedTopic: {
       type: String,
       trim: true
-    }, // Chủ đề gợi ý của phiên
-    status: { 
-      type: String, 
-      enum: ['finding', 'matched', 'ongoing', 'completed', 'cancelled'],
-      default: 'finding'
     },
-    startedAt: { type: Date },
+    status: {
+      type: String,
+      enum: ['finding', 'matched', 'ongoing', 'completed', 'cancelled'],
+      default: 'matched'
+    },
+    startedAt: { type: Date, default: Date.now },
     endedAt: { type: Date },
     durationSeconds: { type: Number, default: 0 }
   },
@@ -25,10 +29,13 @@ const matchSessionSchema = new mongoose.Schema(
   }
 );
 
-// Index tìm kiếm participant trong các phiên
-matchSessionSchema.index({ participants: 1 });
-matchSessionSchema.index({ status: 1 });
+// Thêm Middleware để tự động tính durationSeconds khi kết thúc
+matchSessionSchema.pre('save', function (next) {
+  if (this.status === 'completed' && this.startedAt && this.endedAt) {
+    this.durationSeconds = Math.round((this.endedAt - this.startedAt) / 1000);
+  }
+  next();
+});
 
 const MatchSession = mongoose.model('MatchSession', matchSessionSchema);
-
 export default MatchSession;

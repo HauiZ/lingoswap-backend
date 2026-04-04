@@ -4,25 +4,29 @@ Nền tảng trao đổi ngôn ngữ trực tuyến - Backend API
 
 ## 📁 Cấu trúc thư mục
 
-```
+```text
 lingoswap_backend/
 ├── src/
 │   ├── app.js                 # Cấu hình Express app
-│   ├── controllers/           # Xử lý logic nghiệp vụ
-│   ├── models/                # Schema Mongoose
-│   ├── routes/                # Định nghĩa endpoints
-│   ├── middlewares/           # Middleware (auth, error handler...)
 │   ├── config/                # Cấu hình (database, env...)
-│   └── utils/                 # Tiện ích, helpers
-├── public/                    # File tĩnh (HTML, CSS, JS)
+│   ├── controllers/           # Xử lý logic nghiệp vụ
+│   ├── helper/                # Các helper function (VD: token, hash)
+│   ├── middlewares/           # Middleware (auth, error handler, upload...)
+│   ├── models/                # Schema Mongoose
+│   ├── routes/                # Định nghĩa endpoints (auth, users, ...)
+│   ├── sockets/               # WebSocket handler (match, chat...)
+│   ├── utils/                 # Tiện ích bổ sung
+│   └── workers/               # Tiến trình chạy ngầm (background jobs)
+├── public/                    # File tĩnh (HTML, CSS, JS, ảnh upload)
 ├── views/                     # Template (EJS, Pug...)
 ├── tests/                     # Unit & Integration tests
 ├── server.js                  # Điểm khởi động ứng dụng
 ├── .env                       # Biến môi trường (KHÔNG commit)
 ├── .gitignore                 # File git ignore
 ├── package.json               # Dependencies
-└── README.md                  # Tài liệu
-
+├── api-doc.md                 # Tài liệu API (Chi tiết các endpoint)
+├── func_ui@ux.md              # Đặc tả tính năng và UI/UX
+└── README.md                  # Tài liệu hệ thống tổng quan
 ```
 
 ## 🚀 Cài đặt & Chạy
@@ -67,12 +71,16 @@ Server sẽ chạy tại: `http://localhost:5000`
 
 ## 📚 API Endpoints
 
-### Users
-- `GET /api/users` - Lấy tất cả users
-- `GET /api/users/:id` - Lấy user theo ID
-- `POST /api/users` - Tạo user mới
-- `PUT /api/users/:id` - Cập nhật user (cần auth)
-- `DELETE /api/users/:id` - Xóa user (cần auth)
+Toàn bộ thông tin chi tiết về các API, bao gồm payload, params và response đều được tài liệu hóa cụ thể trong file [`api-doc.md`](./api-doc.md).
+
+**Các nhóm API có sẵn:**
+- **Auth (`/api/auth`)**: Đăng ký, đăng nhập (Local, Google, FB), đổi/quên mật khẩu, lấy lại Token.
+- **Users (`/api/users`)**: Cập nhật hồ sơ, avatar, và xem hồ sơ public.
+- **Admin (`/api/admin`)**: Khóa, xóa tài khoản, lấy danh sách hệ thống (yêu cầu quyền admin).
+- **Conversations (`/api/user/conversations`)**: Lấy danh sách đoạn hội thoại và tin nhắn.
+- **Friends (`/api/user/friends`)**: Gửi yêu cầu kết bạn, xem và phản hồi lời mời.
+
+*(Ứng dụng cũng tích hợp **Swagger UI**, có thể truy cập tại `http://localhost:5000/api-docs` khi chạy ở máy local)*
 
 ## 🔐 Xác thực
 

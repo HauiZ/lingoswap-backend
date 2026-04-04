@@ -1,11 +1,12 @@
 # Tài liệu API LingoSwap Backend
 
-Dưới đây là tổng hợp toàn bộ các API hiện tại của hệ thống, dựa trên cấu trúc Routing (`auth`, `user`, `admin`). API có tag `🔒 Yêu cầu Token` cần đính kèm header `Authorization: Bearer <accessToken>`.
+Dưới đây là chi tiết toàn bộ các API hiện tại của hệ thống. 
+API có tag `🔒 Yêu cầu Token` cần gửi kèm Header: `Authorization: Bearer <accessToken>`.
 
 ---
 
 ## 1. Authentication APIs (`/api/auth`)
-Các API liên quan đến xác thực, đăng nhập và quản lý mật khẩu.
+Các API liên quan đến xác thực, đăng nhập và quản lý tài khoản.
 
 ### 1.1 Đăng ký người dùng
 - **Method:** `POST`
@@ -16,14 +17,22 @@ Các API liên quan đến xác thực, đăng nhập và quản lý mật khẩ
     "email": "user@example.com",
     "password": "Password123!",
     "fullName": "Nguyen Van A",
-    "nativeLanguage": "vi",
-    "targetLanguage": "en",
+    "language": "vi",
     "proficiencyLevel": "Beginner" // Enum: ['Beginner', 'Intermediate', 'Advanced']
   }
   ```
 - **Responses:**
-  - `201 Created`: Đăng ký thành công (trả về thông tin user & token).
-  - `400 Bad Request`: Lỗi dữ liệu không hợp lệ.
+  - `201 Created`: Trả về JWT Token và thông tin cơ bản. RefreshToken được set vào Cookie.
+    ```json
+    {
+      "id": "60d0fe4f5311236168a109ca",
+      "email": "user@example.com",
+      "profile": { "fullName": "Nguyen Van A", "language": "vi", "proficiencyLevel": "Beginner" },
+      "role": "user",
+      "token": "eyJhb..."
+    }
+    ```
+  - `400 Bad Request`: `{ "error": "Email đã được sử dụng" }` hoặc lỗi validate dữ liệu.
 
 ### 1.2 Đăng nhập bằng Mật khẩu
 - **Method:** `POST`
@@ -36,8 +45,9 @@ Các API liên quan đến xác thực, đăng nhập và quản lý mật khẩ
   }
   ```
 - **Responses:**
-  - `200 OK`: Đăng nhập thành công, trả về JWT Token và gán `refreshToken` vào HttpOnly Cookie.
-  - `401 Unauthorized`: Sai email hoặc mật khẩu.
+  - `200 OK`: Trả về JWT Token và thông tin user (giống Đăng ký). Set `refreshToken` vào Cookie.
+  - `401 Unauthorized`: `{ "error": "Email hoặc mật khẩu không chính xác" }`
+  - `403 Forbidden`: `{ "error": "Tài khoản đã bị khóa" }`
 
 ### 1.3 Đăng nhập bằng Google
 - **Method:** `POST`
@@ -49,8 +59,7 @@ Các API liên quan đến xác thực, đăng nhập và quản lý mật khẩ
   }
   ```
 - **Responses:**
-  - `200 OK`: Đăng nhập hoặc tạo mới thành công, gán JWT Token.
-  - `400 Bad Request`: Thiếu `idToken`.
+  - `200 OK`: Trả về JWT Token và thông tin user (giống Đăng ký). Set `refreshToken` vào Cookie.
 
 ### 1.4 Đăng nhập bằng Facebook
 - **Method:** `POST`
@@ -62,24 +71,27 @@ Các API liên quan đến xác thực, đăng nhập và quản lý mật khẩ
   }
   ```
 - **Responses:**
-  - `200 OK`: Đăng nhập hoặc tạo mới thành công, gán JWT Token.
-  - `400 Bad Request`: Thiếu `accessToken` hoặc token không hợp lệ từ FB Graph API.
+  - `200 OK`: Trả về JWT Token và thông tin user. (Tương tự Google/Basic Auth).
 
 ### 1.5 Làm mới Token
 - **Method:** `POST`
 - **Endpoint:** `/api/auth/refresh-token`
 - **Request Header/Cookies:** Gửi kèm cookie `refreshToken` đã được set ở bước Đăng nhập.
 - **Responses:**
-  - `200 OK`: Trả về `accessToken` mới.
-  - `401 Unauthorized`: Không tìm thấy Refresh Token (cần đăng nhập lại).
-  - `403 Forbidden`: Refresh Token không hợp lệ hoặc đã hết hạn.
+  - `200 OK`: 
+    ```json
+    {
+      "token": "new.jwt.access.token"
+    }
+    ```
+  - `401/403 Unauthorized`: `{ "error": "Không tìm thấy refresh token, vui lòng đăng nhập lại" }`
 
 ### 1.6 Đăng xuất
 - **Method:** `POST`
 - **Endpoint:** `/api/auth/logout`
 - **Mô tả:** Xóa `refreshToken` cookie khỏi trình duyệt.
 - **Responses:**
-  - `200 OK`: Đăng xuất thành công.
+  - `200 OK`: `{ "message": "Đăng xuất thành công" }`
 
 ### 1.7 Thay đổi mật khẩu `🔒 Yêu cầu Token`
 - **Method:** `PUT`
@@ -92,8 +104,8 @@ Các API liên quan đến xác thực, đăng nhập và quản lý mật khẩ
   }
   ```
 - **Responses:**
-  - `200 OK`: Đổi mật khẩu thành công.
-  - `400 Bad Request`: Sai mật khẩu cũ.
+  - `200 OK`: `{ "message": "Đổi mật khẩu thành công" }`
+  - `400 Bad Request`: `{ "error": "Mật khẩu hiện tại không chính xác" }`
 
 ### 1.8 Yêu cầu quên mật khẩu (Gửi OTP)
 - **Method:** `POST`
@@ -105,8 +117,8 @@ Các API liên quan đến xác thực, đăng nhập và quản lý mật khẩ
   }
   ```
 - **Responses:**
-  - `200 OK`: Email nạp mã OTP đã được gửi.
-  - `404 Not Found`: Không tìm thấy email trong hệ thống.
+  - `200 OK`: `{ "message": "Email đã được gửi" }`
+  - `404 Not Found`: `{ "error": "Không tìm thấy người dùng có email này" }`
 
 ### 1.9 Đặt lại mật khẩu (Dùng OTP)
 - **Method:** `POST`
@@ -120,8 +132,8 @@ Các API liên quan đến xác thực, đăng nhập và quản lý mật khẩ
   }
   ```
 - **Responses:**
-  - `200 OK`: Đặt lại mật khẩu thành công.
-  - `400 Bad Request`: Mã OTP sai hoặc đã quá hạn.
+  - `200 OK`: `{ "message": "Đặt lại mật khẩu thành công" }`
+  - `400 Bad Request`: `{ "error": "Mã OTP không hợp lệ hoặc đã hết hạn" }`
 
 ---
 
@@ -132,15 +144,33 @@ Quản lý thông tin hồ sơ người dùng.
 - **Method:** `GET`
 - **Endpoint:** `/api/users/me`
 - **Responses:**
-  - `200 OK`: Trả về đối tượng hồ sơ người dùng hiện tại (không bao gồm password).
+  - `200 OK`:
+    ```json
+    {
+      "_id": "user_id_string",
+      "email": "user@example.com",
+      "profile": { "fullName": "Nguyen Van A", "bio": "", "avatar": "..." },
+      "settings": { "theme": "light", "uiLanguage": "vi" },
+      "role": "user",
+      "statusAccount": "active"
+    }
+    ```
 
 ### 2.2 Lấy thông tin Public Profile 
 - **Method:** `GET`
 - **Endpoint:** `/api/users/{id}`
 - **Path Parameters:** `id` = ID của người dùng.
 - **Responses:**
-  - `200 OK`: Thông tin public của người dùng.
-  - `404 Not Found`: Người dùng không tồn tại.
+  - `200 OK`: Trả về dữ liệu profile (không bao gồm password, settings, `__v`, status).
+    ```json
+    {
+      "_id": "user_id",
+      "email": "user@example.com",
+      "profile": { "fullName": "Nguyen Van A", "avatar": "..." },
+      "role": "user"
+    }
+    ```
+  - `404 Not Found`: `{ "error": "Người dùng không tồn tại" }`
 
 ### 2.3 Cập nhật hồ sơ cá nhân `🔒 Yêu cầu Token`
 - **Method:** `PUT`
@@ -150,48 +180,184 @@ Quản lý thông tin hồ sơ người dùng.
   {
     "profile": {
       "fullName": "Name Changed",
-      "bio": "New bio text",
-      "targetLanguage": "ja"
+      "bio": "New bio text"
     },
     "settings": {
-      "theme": "dark",
-      "uiLanguage": "vi"
+      "theme": "dark"
     }
   }
   ```
 - **Responses:**
-  - `200 OK`: User cập nhật thành công và trả về thông tin mới.
+  - `200 OK`: 
+    ```json
+    {
+      "message": "Cập nhật hồ sơ thành công",
+      "user": { 
+        "_id": "...", 
+        "profile": { "fullName": "Name Changed", "bio": "New bio text" },
+        "settings": { "theme": "dark" }
+      }
+    }
+    ```
 
 ### 2.4 Cập nhật Avatar `🔒 Yêu cầu Token`
 - **Method:** `POST`
 - **Endpoint:** `/api/users/avatar`
-- **Request Body (Multipart/Form-Data):**
-  - Cần chứa key/field name là `avatar` đi kèm với file ảnh dạng Binary (.jpg, .png, .webp...).
+- **Request Body:** Form-Data (`multipart/form-data`) - Chứa field `avatar` đính kèm file ảnh.
 - **Responses:**
-  - `200 OK`: Cập nhật thành công, trả về `avatarUrl` từ Cloudinary.
-  - `400 Bad Request`: Thiếu thư mục/file ảnh.
+  - `200 OK`: 
+    ```json
+    {
+       "message": "Cập nhật avatar thành công",
+       "avatarUrl": "https://cloudinary..."
+    }
+    ```
 
 ---
 
 ## 3. Admin APIs (`/api/admin`)
-Dành riêng cho quản trị viên, tất cả endpoint đều yêu cầu xác thực (`Authenticate Token`) và quyền (`Role = admin`).
+Dành riêng cho quản trị viên, yêu cầu `🔒 Admin Token`.
 
-### 3.1 Lấy danh sách Users `🔒 Admin Token`
+### 3.1 Lấy danh sách Users
 - **Method:** `GET`
 - **Endpoint:** `/api/admin/users`
 - **Responses:**
-  - `200 OK`: Trả về mảng danh sách toàn bộ người dùng trong hệ thống.
+  - `200 OK`: 
+    ```json
+    [
+      {
+        "_id": "...",
+        "email": "user@example.com",
+        "profile": { "fullName": "..." },
+        "settings": { "theme": "light" },
+        "statusAccount": "active",
+        "role": "user",
+        "createdAt": "..."
+      }
+    ]
+    ```
 
-### 3.2 Khóa (Ban) tài khoản người dùng `🔒 Admin Token`
+### 3.2 Khóa (Ban) tài khoản người dùng
 - **Method:** `PUT`
 - **Endpoint:** `/api/admin/users/{id}/ban`
-- **Path Parameters:** `id` = ID của người dùng cần xử lý.
+- **Path Parameters:** `id` = ID của người dùng.
 - **Responses:**
-  - `200 OK`: Khóa/Gỡ khóa người dùng thành công (Chuyển trạng thái `status`).
+  - `200 OK`: 
+    ```json
+    {
+      "message": "Đã khóa tài khoản người dùng do vi phạm",
+      "user": { 
+        "_id": "...",
+        "email": "user@example.com",
+        "statusAccount": "banned"
+      }
+    }
+    ```
 
-### 3.3 Xóa tài khoản vĩnh viễn `🔒 Admin Token`
+### 3.3 Xóa tài khoản vĩnh viễn
 - **Method:** `DELETE`
 - **Endpoint:** `/api/admin/users/{id}`
 - **Path Parameters:** `id` = ID của người dùng.
 - **Responses:**
-  - `200 OK`: Xóa dữ liệu user thành công.
+  - `200 OK`: `{ "message": "Đã xóa user có ID: {id} vĩnh viễn" }`
+
+---
+
+## 4. Conversation APIs (`/api/user/conversations`)
+Quản lý lịch sử và tin nhắn trong ứng dụng.
+
+### 4.1 Lấy tất cả các cuộc trò chuyện `🔒 Yêu cầu Token`
+- **Method:** `GET`
+- **Endpoint:** `/api/user/conversations/all`
+- **Responses:**
+  - `200 OK`:
+    ```json
+    [
+      {
+        "_id": "conversation_id",
+        "partner": {
+           "_id": "partner_id",
+           "email": "partner@example.com",
+           "profile": { "fullName": "...", "avatar": "..." },
+           "status": "online",
+           "lastSeen": { "full": "10/05/2023 10:30", "friendly": "Vài giây trước" }
+        },
+        "lastMessage": {
+           "content": "Hello",
+           "time": { "full": "10/05/2023 10:30", "friendly": "10 phút trước" }
+        },
+        "updatedAt": { "full": "...", "friendly": "..." }
+      }
+    ]
+    ```
+
+### 4.2 Lấy tin nhắn trong một cuộc trò chuyện `🔒 Yêu cầu Token`
+- **Method:** `GET`
+- **Endpoint:** `/api/user/conversations/{conversationId}`
+- **Query Parameters (Tuỳ chọn):** `?limit=20&page=1`
+- **Path Parameters:** `conversationId` = ID của cuộc trò chuyện cần lấy.
+- **Responses:**
+  - `200 OK`:
+    ```json
+    [
+      {
+        "_id": "message_id",
+        "conversationId": "conv_id",
+        "senderId": "sender_id",
+        "content": "Noi dung tin nhan",
+        "createdAt": {
+           "full": "10/05/2023 10:30",
+           "friendly": "1 phút trước"
+        }
+      }
+    ]
+    ```
+
+---
+
+## 5. Friend APIs (`/api/user/friends`)
+Mọi việc liên quan đến trạng thái gửi, nhận và quản lý bạn bè.
+
+### 5.1 Lấy danh sách yêu cầu kết bạn `🔒 Yêu cầu Token`
+- **Method:** `GET`
+- **Endpoint:** `/api/user/friends/get-friend-requests`
+- **Responses:**
+  - `200 OK`:
+    ```json
+    [
+      {
+        "_id": "friendship_request_id",
+        "partner": {
+           "_id": "requester_id",
+           "username": "user",
+           "avatar": "...",
+           "email": "user@example.com"
+        },
+        "sentAt": { "full": "10/05/2023 10:00", "friendly": "30 phút trước" }
+      }
+    ]
+    ```
+
+### 5.2 Gửi yêu cầu kết bạn `🔒 Yêu cầu Token`
+- **Method:** `POST`
+- **Endpoint:** `/api/user/friends/send-friend-request/{recipientId}`
+- **Path Parameters:** `recipientId` = ID đích.
+- **Responses:**
+  - `201 Created`: `{ "message": "Đã gửi yêu cầu kết bạn" }`
+  - `400 Bad Request`: `{ "error": "Đã tồn tại mối quan hệ với người này" }`
+
+### 5.3 Phản hồi yêu cầu kết bạn `🔒 Yêu cầu Token`
+- **Method:** `POST`
+- **Endpoint:** `/api/user/friends/response-friend-request/{requestId}`
+- **Path Parameters:** `requestId` = ID của lời mời (FriendshipRequest).
+- **Request Body (JSON):**
+  ```json
+  {
+    "status": "accept" // Enum: ['accept', 'reject']
+  }
+  ```
+- **Responses:**
+  - `200 OK`: `{ "message": "Đã chấp nhận yêu cầu kết bạn" }` (nếu `"status": "accept"`)
+  - `200 OK`: `{ "message": "Đã từ chối yêu cầu kết bạn" }` (nếu `"status": "reject"`)
+  - `400 Bad Request`: `{ "error": "Trạng thái không hợp lệ" }`
+  - `403 Forbidden`: `{ "error": "Không có quyền thực hiện hành động này" }`

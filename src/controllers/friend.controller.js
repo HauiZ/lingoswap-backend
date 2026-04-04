@@ -41,9 +41,10 @@ const getFriendRequests = async (req, res) => {
         const friendRequests = await Friendship.find({
             recipientId: userId,
             status: 'pending'
-        }).populate('requesterId', 'username avatar email').sort({ sentAt: -1 });
+        }).populate('requesterId', '_id username avatar email').sort({ sentAt: -1 });
         const listFriendRequests = friendRequests.map(friendRequest => ({
-            ...friendRequest,
+            _id: friendRequest._id,
+            partner: friendRequest.requesterId,
             sentAt: {
                 full: formatSpecificDate(friendRequest.sentAt),
                 friendly: getFriendlyTime(friendRequest.sentAt)

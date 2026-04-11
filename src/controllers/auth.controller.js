@@ -16,9 +16,9 @@ const googleClient = new OAuth2Client(env.GOOGLE_CLIENT_ID);
 // Đăng ký người dùng mới
 const register = async (req, res) => {
   try {
-    const { email, password, fullName, language, proficiencyLevel } = req.body;
+    const { email, password, confirmPassword, fullName, language, proficiencyLevel } = req.body;
 
-    if (!email || !password || !fullName || !language || !proficiencyLevel) {
+    if (!email || !password || !confirmPassword || !fullName || !language || !proficiencyLevel) {
       return res.status(400).json({ error: 'Vui lòng cung cấp đầy đủ thông tin bắt buộc' });
     }
 
@@ -34,6 +34,10 @@ const register = async (req, res) => {
 
     if (!validateUsername(fullName)) {
       return res.status(400).json({ error: 'Tên không hợp lệ' });
+    }
+
+    if (password !== confirmPassword) {
+      return res.status(400).json({ error: 'Mật khẩu không khớp' });
     }
 
     // Kiểm tra xem email đã tồn tại chưa

@@ -1,7 +1,7 @@
 import Message from '../models/Message.js';
 import Conversation from '../models/Conversation.js';
 import redis from '../config/redis.js';
-import { formatSpecificDate, getFriendlyTime } from '../utils/formatDate.js';
+import { formatSpecificDate, getFriendlyTime } from '../utils/timeHelper.js';
 
 const getAllConversation = async (req, res) => {
     try {

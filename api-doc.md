@@ -16,6 +16,7 @@ Các API liên quan đến xác thực, đăng nhập và quản lý tài khoả
   {
     "email": "user@example.com",
     "password": "Password123!",
+    "confirmPassword": "Password123!",
     "fullName": "Nguyen Van A",
     "language": "vi",
     "proficiencyLevel": "Beginner" // Enum: ['Beginner', 'Intermediate', 'Advanced']

@@ -5,12 +5,9 @@ import MatchSession from '../models/MatchSession.js';
 const QUEUE_TIMEOUT_SECONDS = 60;
 
 export const handleMatchProvider = (io, socket) => {
-    const getUserId = (mockId) => {
-        if (mockId) return mockId;
+    const getUserId = () => {
         return socket.user ? socket.user._id.toString() : socket.id;
     };
-
-    let currentUserId = null;
 
     const clearQueueTimeout = (s) => {
         if (s.queueTimeout) {
@@ -20,9 +17,8 @@ export const handleMatchProvider = (io, socket) => {
         }
     };
 
-    socket.on('join_queue', async ({ language, mockUserId }) => {
-        const userId = getUserId(mockUserId);
-        currentUserId = userId;
+    socket.on('join_queue', async ({ language }) => {
+        const userId = getUserId();
         socket.currentLanguage = language;
 
         const queueKey = `queue:${language}`;
@@ -82,10 +78,10 @@ export const handleMatchProvider = (io, socket) => {
                     io.to(partnerSocketId).emit('match_found', { sessionId: roomId, partnerId: userId });
                 }
 
-                // test
-                await redis.set(`socket:${userId}`, socket.id, 'EX', 3600);
-                // await redis.del(`socket:${userId}`);
-                // await redis.del(`socket:${partnerId}`);
+                // // test
+                // await redis.set(`socket:${userId}`, socket.id, 'EX', 3600);
+                // // await redis.del(`socket:${userId}`);
+                // // await redis.del(`socket:${partnerId}`);
 
                 console.log(`[Match] ${userId} <-> ${partnerId} (${language})`);
 
@@ -93,7 +89,7 @@ export const handleMatchProvider = (io, socket) => {
                 clearQueueTimeout(socket);
                 await User.findByIdAndUpdate(userId, { status: 'waiting' });
                 await redis.rpush(queueKey, userId);
-                await redis.set(`socket:${userId}`, socket.id, 'EX', 3600);
+                // await redis.set(`socket:${userId}`, socket.id, 'EX', 3600);
 
                 socket.emit('waiting_status', { message: 'Đang tìm kiếm đối thủ...' });
 
@@ -101,8 +97,8 @@ export const handleMatchProvider = (io, socket) => {
                     const stillInQueue = await redis.lpos(queueKey, userId);
                     if (stillInQueue !== null) {
                         await redis.lrem(queueKey, 0, userId);
-                        // test
-                        await redis.del(`socket:${userId}`);
+                        // // test
+                        // await redis.del(`socket:${userId}`);
 
                         await User.findByIdAndUpdate(userId, { status: 'online' });
                         socket.emit('queue_timeout', {
@@ -121,7 +117,7 @@ export const handleMatchProvider = (io, socket) => {
 
 
     const leaveMatchAndQueue = async () => {
-        const userId = currentUserId || socket.id;
+        const userId = getUserId();
 
         // Hủy timeout nếu đang chờ
         clearQueueTimeout(socket);
@@ -130,8 +126,8 @@ export const handleMatchProvider = (io, socket) => {
             if (socket.currentLanguage) {
                 await redis.lrem(`queue:${socket.currentLanguage}`, 0, userId);
             }
-            // test
-            await redis.del(`socket:${userId}`);
+            // // test
+            // await redis.del(`socket:${userId}`);
 
             const activeSession = await MatchSession.findOneAndUpdate(
                 { participants: userId, status: 'ongoing' },
@@ -151,8 +147,8 @@ export const handleMatchProvider = (io, socket) => {
                             message: 'Đối tác đã rời cuộc trò chuyện.',
                         });
                     }
-                    // test
-                    await redis.del(`socket:${partnerId}`);
+                    // // test
+                    // await redis.del(`socket:${partnerId}`);
                     await User.findByIdAndUpdate(partnerId, { status: 'online' });
                 }
             }

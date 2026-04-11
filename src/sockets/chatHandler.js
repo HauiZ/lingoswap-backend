@@ -4,8 +4,8 @@ import redis from '../config/redis.js';
 
 export const handleChatProvider = (io, socket) => {
 
-    socket.on('send_message', async ({ mockUserId, partnerId, content, matchSessionId, type = 'text' }) => {
-        const senderId = mockUserId || socket.user._id;
+    socket.on('send_message', async ({ partnerId, content, matchSessionId, type = 'text' }) => {
+        const senderId = socket.user._id;
 
         try {
             console.log(senderId, partnerId, content, matchSessionId, type);

@@ -1,6 +1,6 @@
 import Conversation from "../models/Conversation.js";
 import Friendship from "../models/Friendship.js";
-import { formatSpecificDate, getFriendlyTime } from '../utils/formatDate.js';
+import { formatSpecificDate, getFriendlyTime } from '../utils/timeHelper.js';
 
 const sendFriendRequest = async (req, res) => {
     try {

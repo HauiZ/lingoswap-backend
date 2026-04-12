@@ -25,12 +25,7 @@ const userSchema = new mongoose.Schema(
       fullName: { type: String, required: true, trim: true },
       avatar: { type: String, default: 'default_avatar.png' },
       bio: { type: String, maxLength: 500, default: '' },
-      language: { type: String, required: true }, // VD: 'vi', 'en'
-      proficiencyLevel: {
-        type: String,
-        enum: ['Beginner', 'Intermediate', 'Advanced'],
-        required: true
-      }
+      country: { type: String, required: true }, // VD: 'vi', 'en'
     },
 
     status: {

@@ -5,7 +5,7 @@ import { authenticateToken } from "../middlewares/auth.js";
 const router = Router();
 /**
  * @swagger
- * /api/user/friends/get-friend-requests:
+ * /api/user/friends/friends/requests:
  *   get:
  *     summary: Lấy danh sách yêu cầu kết bạn
  *     tags: [Friends]
@@ -15,11 +15,11 @@ const router = Router();
  *       200:
  *         description: Danh sách yêu cầu kết bạn
  */
-router.get('/get-friend-requests', authenticateToken, getFriendRequests);
+router.get('/friends/requests', authenticateToken, getFriendRequests);
 
 /**
  * @swagger
- * /api/user/friends/send-friend-request/:recipientId:
+ * /api/user/friends/friends/:recipientId/request:
  *   post:
  *     summary: Gửi yêu cầu kết bạn
  *     tags: [Friends]
@@ -35,12 +35,12 @@ router.get('/get-friend-requests', authenticateToken, getFriendRequests);
  *       200:
  *         description: Yêu cầu kết bạn đã được gửi
  */
-router.post('/send-friend-request/:recipientId', authenticateToken, sendFriendRequest);
+router.post('/friends/:recipientId/request', authenticateToken, sendFriendRequest);
 
 /**
  * @swagger
- * /api/user/friends/response-friend-request/:requestId:
- *   post:
+ * /api/user/friends/friends/:requestId/response:
+ *   patch:
  *     summary: Phản hồi yêu cầu kết bạn
  *     tags: [Friends]
  *     security:
@@ -51,16 +51,22 @@ router.post('/send-friend-request/:recipientId', authenticateToken, sendFriendRe
  *         required: true
  *         schema:
  *           type: string
- *      - in: body
- *        name: status
- *        required: true
- *        schema:
- *          type: string
- *          enum: [accept, reject]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - status
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [accept, reject]
  *     responses:
  *       200:
  *         description: Yêu cầu kết bạn đã được phản hồi
  */
-router.post('/response-friend-request/:requestId', authenticateToken, responseFriendRequest);
+router.patch('/friends/:requestId/response', authenticateToken, responseFriendRequest);
 
 export default router;

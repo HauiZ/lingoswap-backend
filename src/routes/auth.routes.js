@@ -29,12 +29,9 @@ import { authenticateToken } from '../middlewares/auth.js';
  *                 type: string
  *               fullName:
  *                 type: string
- *               language:
+ *               country:
  *                 type: string
  *                 example: "vi"
- *               proficiencyLevel:
- *                 type: string
- *                 enum: ['Beginner', 'Intermediate', 'Advanced']
  *     responses:
  *       201:
  *         description: Đăng ký thành công
@@ -135,7 +132,7 @@ router.post('/logout', logout);
 
 /**
  * @swagger
- * /api/auth/refresh-token:
+ * /api/auth/token:
  *   post:
  *     summary: Làm mới access token bằng refresh token trong cookie
  *     tags: [Auth]
@@ -147,12 +144,12 @@ router.post('/logout', logout);
  *       403:
  *         description: Refresh token không hợp lệ
  */
-router.post('/refresh-token', refreshAccessToken);
+router.post('/token', refreshAccessToken);
 
 /**
  * @swagger
- * /api/auth/change-password:
- *   put:
+ * /api/auth/password/change:
+ *   patch:
  *     summary: Thay đổi mật khẩu
  *     tags: [Auth]
  *     security:
@@ -177,11 +174,11 @@ router.post('/refresh-token', refreshAccessToken);
  *       400:
  *         description: Sai mật khẩu cũ
  */
-router.put('/change-password', authenticateToken, changePassword);
+router.patch('/password/change', authenticateToken, changePassword);
 
 /**
  * @swagger
- * /api/auth/forgot-password:
+ * /api/auth/password/forgot:
  *   post:
  *     summary: Yêu cầu lấy lại mật khẩu (gửi mã OTP qua email)
  *     tags: [Auth]
@@ -204,11 +201,11 @@ router.put('/change-password', authenticateToken, changePassword);
  *       404:
  *         description: Không tìm thấy email
  */
-router.post('/forgot-password', forgotPassword);
+router.post('/password/forgot', forgotPassword);
 
 /**
  * @swagger
- * /api/auth/reset-password:
+ * /api/auth/password/reset:
  *   post:
  *     summary: Đặt lại mật khẩu sử dụng mã OTP
  *     tags: [Auth]
@@ -235,6 +232,6 @@ router.post('/forgot-password', forgotPassword);
  *       400:
  *         description: Mã OTP sai hoặc hết hạn
  */
-router.post('/reset-password', resetPassword);
+router.post('/password/reset', resetPassword);
 
 export default router;

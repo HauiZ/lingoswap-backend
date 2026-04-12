@@ -16,9 +16,9 @@ const googleClient = new OAuth2Client(env.GOOGLE_CLIENT_ID);
 // Đăng ký người dùng mới
 const register = async (req, res) => {
   try {
-    const { email, password, confirmPassword, fullName, language, proficiencyLevel } = req.body;
+    const { email, password, confirmPassword, fullName, country } = req.body;
 
-    if (!email || !password || !confirmPassword || !fullName || !language || !proficiencyLevel) {
+    if (!email || !password || !confirmPassword || !fullName || !country) {
       return res.status(400).json({ error: 'Vui lòng cung cấp đầy đủ thông tin bắt buộc' });
     }
 
@@ -56,8 +56,7 @@ const register = async (req, res) => {
       password: hashedPassword,
       profile: {
         fullName,
-        language,
-        proficiencyLevel
+        country
       }
     });
 

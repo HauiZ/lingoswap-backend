@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import path from 'path';
 import swaggerUi from 'swagger-ui-express';
@@ -10,6 +11,7 @@ import adminRoutes from './routes/admin.routes.js';
 import conversationRoutes from './routes/conversation.routes.js';
 import friendRoutes from './routes/friend.routes.js';
 import errorHandler from './middlewares/errorHandler.js';
+import env from './config/env.js';
 
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -21,6 +23,11 @@ const __dirname = dirname(__filename);
 const app = express();
 
 // Middleware
+app.use(cors({
+  origin: env.FRONTEND_URL,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  credentials: true,
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());

@@ -18,8 +18,7 @@ Các API liên quan đến xác thực, đăng nhập và quản lý tài khoả
     "password": "Password123!",
     "confirmPassword": "Password123!",
     "fullName": "Nguyen Van A",
-    "language": "vi",
-    "proficiencyLevel": "Beginner" // Enum: ['Beginner', 'Intermediate', 'Advanced']
+    "country": "vi",
   }
   ```
 - **Responses:**
@@ -76,7 +75,7 @@ Các API liên quan đến xác thực, đăng nhập và quản lý tài khoả
 
 ### 1.5 Làm mới Token
 - **Method:** `POST`
-- **Endpoint:** `/api/auth/refresh-token`
+- **Endpoint:** `/api/auth/token`
 - **Request Header/Cookies:** Gửi kèm cookie `refreshToken` đã được set ở bước Đăng nhập.
 - **Responses:**
   - `200 OK`: 
@@ -95,8 +94,8 @@ Các API liên quan đến xác thực, đăng nhập và quản lý tài khoả
   - `200 OK`: `{ "message": "Đăng xuất thành công" }`
 
 ### 1.7 Thay đổi mật khẩu `🔒 Yêu cầu Token`
-- **Method:** `PUT`
-- **Endpoint:** `/api/auth/change-password`
+- **Method:** `PATCH`
+- **Endpoint:** `/api/auth/password/change`
 - **Request Body (JSON):**
   ```json
   {
@@ -110,7 +109,7 @@ Các API liên quan đến xác thực, đăng nhập và quản lý tài khoả
 
 ### 1.8 Yêu cầu quên mật khẩu (Gửi OTP)
 - **Method:** `POST`
-- **Endpoint:** `/api/auth/forgot-password`
+- **Endpoint:** `/api/auth/password/forgot`
 - **Request Body (JSON):**
   ```json
   {
@@ -123,7 +122,7 @@ Các API liên quan đến xác thực, đăng nhập và quản lý tài khoả
 
 ### 1.9 Đặt lại mật khẩu (Dùng OTP)
 - **Method:** `POST`
-- **Endpoint:** `/api/auth/reset-password`
+- **Endpoint:** `/api/auth/password/reset`
 - **Request Body (JSON):**
   ```json
   {
@@ -321,7 +320,7 @@ Mọi việc liên quan đến trạng thái gửi, nhận và quản lý bạn 
 
 ### 5.1 Lấy danh sách yêu cầu kết bạn `🔒 Yêu cầu Token`
 - **Method:** `GET`
-- **Endpoint:** `/api/user/friends/get-friend-requests`
+- **Endpoint:** `/api/user/friends/friends/requests`
 - **Responses:**
   - `200 OK`:
     ```json
@@ -341,15 +340,15 @@ Mọi việc liên quan đến trạng thái gửi, nhận và quản lý bạn 
 
 ### 5.2 Gửi yêu cầu kết bạn `🔒 Yêu cầu Token`
 - **Method:** `POST`
-- **Endpoint:** `/api/user/friends/send-friend-request/{recipientId}`
+- **Endpoint:** `/api/user/friends/friends/{recipientId}/request`
 - **Path Parameters:** `recipientId` = ID đích.
 - **Responses:**
   - `201 Created`: `{ "message": "Đã gửi yêu cầu kết bạn" }`
   - `400 Bad Request`: `{ "error": "Đã tồn tại mối quan hệ với người này" }`
 
 ### 5.3 Phản hồi yêu cầu kết bạn `🔒 Yêu cầu Token`
-- **Method:** `POST`
-- **Endpoint:** `/api/user/friends/response-friend-request/{requestId}`
+- **Method:** `PATCH`
+- **Endpoint:** `/api/user/friends/friends/{requestId}/response`
 - **Path Parameters:** `requestId` = ID của lời mời (FriendshipRequest).
 - **Request Body (JSON):**
   ```json

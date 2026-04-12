@@ -53,6 +53,13 @@ router.get('/:id', getUserById);
  *             properties:
  *               profile:
  *                 type: object
+ *                 properties:
+ *                   fullName:
+ *                     type: string
+ *                   country:
+ *                     type: string
+ *                   bio:
+ *                     type: string
  *               settings:
  *                 type: object
  *     responses:

@@ -7,6 +7,7 @@ import env from './src/config/env.js';
 import redis from './src/config/redis.js';
 import { handleChatProvider } from './src/sockets/chatHandler.js';
 import { startLastOnlineWorker } from './src/workers/syncLastOnline.js';
+import User from './src/models/User.js';
 
 const PORT = env.PORT || 5000;
 

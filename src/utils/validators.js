@@ -10,8 +10,8 @@ const validatePassword = (password) => {
 };
 
 const validateUsername = (username) => {
-  // Username: 3-20 ký tự, chỉ chứa chữ, số, dấu gạch dưới
-  const regex = /^[a-zA-Z0-9_]{3,20}$/;
+  // Username: 3-20 ký tự, chỉ chứa chữ, số, dấu gạch dưới, khoảng trắng
+  const regex = /^[a-zA-Z0-9_ ]{3,20}$/;
   return regex.test(username);
 };
 

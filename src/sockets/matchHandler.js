@@ -2,7 +2,9 @@ import redis from '../config/redis.js';
 import { 
     findOrQueuePartnerService, 
     handleQueueTimeoutService, 
-    leaveMatchAndQueueService 
+    leaveMatchAndQueueService,
+    requestDirectMatchService,
+    acceptDirectMatchService
 } from '../services/match.service.js';
 
 const QUEUE_TIMEOUT_SECONDS = 60;
@@ -103,6 +105,75 @@ export const handleMatchProvider = (io, socket) => {
             console.error('Cleanup Error:', error);
         }
     };
+
+    socket.on('direct_match_request', async ({ targetUserId }) => {
+        const userId = getUserId();
+        try {
+            const partnerSocketId = await requestDirectMatchService(userId, targetUserId);
+            
+            io.to(partnerSocketId).emit('direct_match_offer', { 
+                 callerId: userId,
+                 message: 'Bạn có một cuộc gọi đến.'
+            });
+        } catch (err) {
+            socket.emit('direct_match_error', { message: err.message });
+        }
+    });
+
+    socket.on('direct_match_response', async ({ callerId, accept }) => {
+        const userId = getUserId();
+        try {
+            const callerSocketId = await redis.get(`socket:${callerId}`);
+            
+            if (!accept) {
+                if (callerSocketId) {
+                    io.to(callerSocketId).emit('direct_match_rejected', {
+                         message: 'Người dùng đã từ chối cuộc gọi.'
+                    });
+                }
+                return;
+            }
+
+            // Accept Match
+            const { sessionId } = await acceptDirectMatchService(callerId, userId);
+            
+            socket.join(sessionId);
+            if (callerSocketId) {
+                 const callerSocket = io.sockets.sockets.get(callerSocketId);
+                 if (callerSocket) {
+                      callerSocket.join(sessionId);
+                      clearQueueTimeout(callerSocket);
+                 }
+            }
+            clearQueueTimeout(socket);
+
+            // Notify both to transition to call room
+            io.to(socket.id).emit('match_found', { sessionId, partnerId: callerId });
+            if (callerSocketId) {
+                 io.to(callerSocketId).emit('match_found', { sessionId, partnerId: userId });
+            }
+
+        } catch (err) {
+             console.error('Direct Match Accept Error:', err);
+             socket.emit('direct_match_error', { message: err.message });
+             const callerSocketId = await redis.get(`socket:${callerId}`);
+             if (callerSocketId) {
+                  io.to(callerSocketId).emit('direct_match_error', { message: 'Lỗi khi đồng ý kết nối.' });
+             }
+        }
+    });
+
+    socket.on('webrtc_offer', ({ sessionId, offer }) => {
+        socket.to(sessionId).emit('webrtc_offer', { offer });
+    });
+
+    socket.on('webrtc_answer', ({ sessionId, answer }) => {
+        socket.to(sessionId).emit('webrtc_answer', { answer });
+    });
+
+    socket.on('webrtc_ice_candidate', ({ sessionId, candidate }) => {
+        socket.to(sessionId).emit('webrtc_ice_candidate', { candidate });
+    });
 
     socket.on('disconnect', leaveMatchAndQueue);
     socket.on('leave_queue', leaveMatchAndQueue);

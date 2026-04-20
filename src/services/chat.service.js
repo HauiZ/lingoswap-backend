@@ -6,15 +6,22 @@ import Conversation from '../models/Conversation.js';
  */
 export const saveMessageService = async ({ senderId, partnerId, content, matchSessionId, type = 'text' }) => {
     // 1. Find existing conversation or create a new one
-    let conversation = await Conversation.findOne({
-        participants: { $all: [senderId, partnerId] }
-    });
+    let query = { participants: { $all: [senderId, partnerId] } };
+    
+    // Phân tách phòng chat matching (có ID phòng) và chat bạn bè (ID phòng null)
+    if (matchSessionId) {
+        query.matchSessionId = matchSessionId;
+    } else {
+        query.matchSessionId = null;
+    }
+
+    let conversation = await Conversation.findOne(query);
 
     if (!conversation) {
         conversation = await Conversation.create({
             participants: [senderId, partnerId],
             matchSessionId: matchSessionId || null,
-            isPermanent: false
+            isPermanent: !matchSessionId // Trở thành chat lâu dài nếu không thuộc về 1 phòng match nào
         });
     }
 

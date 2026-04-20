@@ -84,3 +84,40 @@ export const leaveMatchAndQueueService = async (userId, currentLanguage) => {
 
     return { activeSession, partnerId };
 };
+
+export const requestDirectMatchService = async (callerId, targetUserId) => {
+    const targetUser = await User.findById(targetUserId).select('status');
+    if (!targetUser) {
+        throw new Error('Người dùng không tồn tại.');
+    }
+    if (targetUser.status === 'in-call') {
+        throw new Error('Người này đang trong một cuộc gọi khác.');
+    }
+
+    const partnerSocketId = await redis.get(`socket:${targetUserId}`);
+    if (!partnerSocketId) {
+        throw new Error('Người dùng hiện đang offline.');
+    }
+    return partnerSocketId;
+};
+
+export const acceptDirectMatchService = async (callerId, targetUserId) => {
+    const users = await User.find({ _id: { $in: [callerId, targetUserId] } });
+    if (users.some(u => u.status === 'in-call')) {
+        throw new Error('Một trong hai người đang trong cuộc gọi khác.');
+    }
+
+    const newSession = await MatchSession.create({
+        participants: [callerId, targetUserId],
+        language: 'any',
+        status: 'ongoing',
+        startedAt: new Date(),
+    });
+
+    await User.updateMany(
+        { _id: { $in: [callerId, targetUserId] } },
+        { status: 'in-call' }
+    );
+
+    return { sessionId: newSession._id.toString() };
+};

@@ -1,5 +1,15 @@
 import friendService from '../services/friend.service.js';
 
+const getListFriends = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const listFriends = await friendService.getListFriends(userId);
+        res.status(200).json(listFriends);
+    } catch (error) {
+        res.status(error.statusCode || 500).json({ error: error.message || 'Lỗi khi lấy danh sách bạn bè' });
+    }
+}
+
 const sendFriendRequest = async (req, res) => {
     try {
         const { recipientId } = req.params;
@@ -36,6 +46,7 @@ const responseFriendRequest = async (req, res) => {
 }
 
 export {
+    getListFriends,
     sendFriendRequest,
     responseFriendRequest,
     getFriendRequests

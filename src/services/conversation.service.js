@@ -5,7 +5,10 @@ import { formatSpecificDate, getFriendlyTime } from '../utils/timeHelper.js';
 import ApiError from '../utils/ApiError.js';
 
 const getAllConversation = async (userId) => {
-    const conversations = await Conversation.find({ participants: userId })
+    const conversations = await Conversation.find({ 
+        participants: userId,
+        matchSessionId: null // Bỏ qua các chat từ các Match Session tạm thời
+    })
         .populate('participants', 'profile.fullName profile.avatar email status lastOnlineAt')
         .populate('lastMessage', 'content createdAt')
         .sort({ updatedAt: -1 })

@@ -1,8 +1,23 @@
 import { Router } from "express";
-import { sendFriendRequest, responseFriendRequest, getFriendRequests } from "../controllers/friend.controller.js";
+import { getListFriends, sendFriendRequest, responseFriendRequest, getFriendRequests } from "../controllers/friend.controller.js";
 import { authenticateToken } from "../middlewares/auth.js";
 
 const router = Router();
+
+/**
+ * @swagger
+ * /api/user/friends/friends:
+ *   get:
+ *     summary: Lấy danh sách bạn bè
+ *     tags: [Friends]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Danh sách bạn bè
+ */
+router.get('/friends', authenticateToken, getListFriends);
+
 /**
  * @swagger
  * /api/user/friends/friends/requests:

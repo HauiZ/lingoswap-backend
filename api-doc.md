@@ -361,3 +361,113 @@ Mọi việc liên quan đến trạng thái gửi, nhận và quản lý bạn 
   - `200 OK`: `{ "message": "Đã từ chối yêu cầu kết bạn" }` (nếu `"status": "reject"`)
   - `400 Bad Request`: `{ "error": "Trạng thái không hợp lệ" }`
   - `403 Forbidden`: `{ "error": "Không có quyền thực hiện hành động này" }`
+
+---
+
+## 6. Matches APIs (`/api/user/matches`)
+Lịch sử cuộc gọi và ghép cặp (Match Session History).
+
+### 6.1 Lấy danh sách lịch sử các phiên Matching `🔒 Yêu cầu Token`
+- **Method:** `GET`
+- **Endpoint:** `/api/user/matches`
+- **Query Parameters (Tuỳ chọn):** `?limit=20&page=1`
+- **Responses:**
+  - `200 OK`: Trả về danh sách các cuộc gọi có thời lượng.
+    ```json
+    [
+      {
+        "_id": "match_session_id",
+        "status": "completed",
+        "durationSeconds": 145,
+        "conversationId": "conversation_id",
+        "partner": {
+           "_id": "partner_id",
+           "username": "user",
+           "profile": { "fullName": "Nguyen B" }
+        }
+      }
+    ]
+    ```
+
+### 6.2 Lấy chi tiết phiên gọi bao gồm tin nhắn `🔒 Yêu cầu Token`
+- **Method:** `GET`
+- **Endpoint:** `/api/user/matches/{sessionId}`
+- **Path Parameters:** `sessionId` = ID của phiên gọi.
+- **Responses:**
+  - `200 OK`:
+    ```json
+    {
+      "_id": "match_session_id",
+      "status": "completed",
+      "durationSeconds": 145,
+      "conversationId": "conversation_id",
+      "partner": { ... },
+      "messages": [
+        {
+          "_id": "msg_id",
+          "senderId": "nguoi_gui",
+          "content": "Noi dung chat"
+        }
+      ]
+    }
+    ```
+  - `400/500 Lỗi`: `{ "error": "Phiên gọi không tồn tại hoặc Không có quyền truy cập." }`
+
+---
+
+## 7. Socket.IO EVENTS
+Danh sách các sự kiện Socket phục vụ ghép cặp ngẫu nhiên, gọi bạn bè, nhắn tin và gọi video (WebRTC). (Client dùng websocket `socket.emit` và `socket.on`).
+
+### 7.1 Lướt ngẫu nhiên (Random Match)
+- **`[EMIT]` join_queue**: Gửi yêu cầu ghép cặp ngẫu nhiên.
+  - *Payload*: `{ "language": "vi" }`
+- **`[EMIT]` leave_queue**: Thoát hàng chờ hoặc thoát khỏi phòng match hiện tại.
+- **`[ON]` waiting_status**: Đang tìm kiếm...
+  - *Payload*: `{ "message": "Đang tìm kiếm đối thủ..." }`
+- **`[ON]` queue_timeout**: Lỗi / hết thời gian xếp hàng.
+  - *Payload*: `{ "message": "Không tìm được đối tác..." }`
+- **`[ON]` match_found**: Ghép cặp hoặc cuộc gọi trực tiếp thành công!
+  - *Payload*: `{ "sessionId": "id_phong", "partnerId": "id_đối_phương" }`
+
+### 7.2 Gọi thân thiết (Direct Intentional Matching)
+- **`[EMIT]` direct_match_request**: Yêu cầu gọi điện tới một người bạn.
+  - *Payload*: `{ "targetUserId": "user_id_người_muốn_gọi" }`
+- **`[EMIT]` direct_match_response**: Phản hồi (Bắt máy / Từ chối).
+  - *Payload*: `{ "callerId": "user_id_người_gọi", "accept": true }`
+- **`[ON]` direct_match_offer**: Nhận được thông báo có cuộc gọi đến (đổ chuông).
+  - *Payload*: `{ "callerId": "người_gọi", "message": "Bạn có một cuộc gọi đến." }`
+- **`[ON]` direct_match_rejected**: Người kia đã dập máy/từ chối cuộc gọi.
+  - *Payload*: `{ "message": "Người dùng đã từ chối cuộc gọi." }`
+- **`[ON]` direct_match_error**: Các lỗi như đối phương offline, lỗi đồng ý kết nối.
+  - *Payload*: `{ "message": "Đối tác hiện đang offline." }`
+
+### 7.3 WebRTC (Truyền tải âm thanh / Video P2P)
+Sử dụng chung các luồng sau cho WebRTC, truyền tải dữ liệu P2P trong thời gian thực khi đã ở chung 1 phòng gọi.
+- **`[EMIT / ON]` webrtc_offer**: Truyền và Lắng nghe SDP Offer.
+  - *Payload*: `{ "sessionId": "id_phong", "offer": { type: "offer", sdp: "..." } }`
+- **`[EMIT / ON]` webrtc_answer**: Truyền và Lắng nghe SDP Answer.
+  - *Payload*: `{ "sessionId": "id_phong", "answer": { type: "answer", sdp: "..." } }`
+- **`[EMIT / ON]` webrtc_ice_candidate**: Gửi các đường rẽ mạng ICE.
+  - *Payload*: `{ "sessionId": "id_phong", "candidate": { ... } }`
+
+### 7.4 Chat theo thời gian thực (Messaging)
+- **`[EMIT]` send_message**: Gửi một tin nhắn.
+  - *Payload*:
+    ```json
+    {
+      "partnerId": "id_người_nhận",
+      "content": "Nội dung chat",
+      "matchSessionId": "id_phong" // (Bỏ trống hoặc null nếu là nhắn riêng bên ngoài với bạn bè)
+    }
+    ```
+- **`[ON]` message_sent_success**: Thông báo đã lưu xuống Database thành công.
+  - *Payload*: `Message Object`
+- **`[ON]` receive_message**: Có tin nhắn mới được gửi đến (Tới người nhận).
+  - *Payload*: 
+    ```json
+    {
+      "_id": "message_id",
+      "content": "Nội dung chat",
+      "conversationId": "..."
+    }
+    ```

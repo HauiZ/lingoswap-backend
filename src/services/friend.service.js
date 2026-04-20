@@ -2,6 +2,27 @@ import Conversation from "../models/Conversation.js";
 import Friendship from "../models/Friendship.js";
 import { formatSpecificDate, getFriendlyTime } from '../utils/timeHelper.js';
 import ApiError from '../utils/ApiError.js';
+import User from "../models/User.js";
+
+const getListFriends = async (userId) => {
+    const friendships = await Friendship.find({
+        $or: [
+            { requesterId: userId, status: 'accepted' },
+            { recipientId: userId, status: 'accepted' }
+        ]
+    }).populate('requesterId', '_id username avatar email').populate('recipientId', '_id username avatar email');
+
+    const listFriends = friendships.map(friendship => {
+        const partner = friendship.requesterId._id.toString() === userId.toString() ? friendship.recipientId : friendship.requesterId;
+        return {
+            _id: partner._id,
+            username: partner.username,
+            avatar: partner.avatar,
+            email: partner.email
+        };
+    });
+    return listFriends;
+};
 
 const sendFriendRequest = async (requesterId, recipientId) => {
     if (requesterId === recipientId) {
@@ -82,6 +103,7 @@ const responseFriendRequest = async (userId, requestId, status) => {
 };
 
 export default {
+    getListFriends,
     sendFriendRequest,
     getFriendRequests,
     responseFriendRequest

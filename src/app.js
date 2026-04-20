@@ -10,6 +10,7 @@ import authRoutes from './routes/auth.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import conversationRoutes from './routes/conversation.routes.js';
 import friendRoutes from './routes/friend.routes.js';
+import matchSessionRoutes from './routes/matchSession.routes.js';
 import errorHandler from './middlewares/errorHandler.js';
 import env from './config/env.js';
 
@@ -52,6 +53,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/user/conversations', conversationRoutes);
 app.use('/api/user/friends', friendRoutes);
+app.use('/api/user/matches', matchSessionRoutes);
 
 // Home route
 

@@ -5,7 +5,7 @@ import { formatSpecificDate, getFriendlyTime } from '../utils/timeHelper.js';
 import ApiError from '../utils/ApiError.js';
 
 const getAllConversation = async (userId) => {
-    const conversations = await Conversation.find({ 
+    const conversations = await Conversation.find({
         participants: userId,
         matchSessionId: null // Bỏ qua các chat từ các Match Session tạm thời
     })
@@ -55,7 +55,7 @@ const getMessagesByConversation = async (conversationId, limit = 20, page = 1) =
         .limit(limit * 1)
         .skip((page - 1) * limit)
         .exec();
-        
+
     const formattedMessages = messages.map(msg => ({
         ...msg.toObject(),
         createdAt: {
@@ -63,7 +63,7 @@ const getMessagesByConversation = async (conversationId, limit = 20, page = 1) =
             friendly: getFriendlyTime(msg.createdAt)
         }
     }));
-    
+
     return formattedMessages.reverse();
 };
 

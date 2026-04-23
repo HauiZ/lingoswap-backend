@@ -1,6 +1,6 @@
 import express from 'express';
 const router = express.Router();
-import { getAllUsers, banUser, deleteUser } from '../controllers/admin.controller.js';
+import { getAllUsers, banUser, deleteUser, getReports, resolveReport } from '../controllers/admin.controller.js';
 import { authenticateToken, authorizeRoles } from '../middlewares/auth.js';
 
 router.use(authenticateToken, authorizeRoles('admin'));
@@ -58,5 +58,61 @@ router.put('/users/:id/ban', banUser);
  *         description: Xóa thành công
  */
 router.delete('/users/:id', deleteUser);
+
+/**
+ * @swagger
+ * /api/admin/reports:
+ *   get:
+ *     summary: Lấy danh sách toàn bộ báo cáo vi phạm (Có phân trang và lọc trạng thái)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *         description: Trạng thái (pending, investigating, resolved, dismissed)
+ *     responses:
+ *       200:
+ *         description: Trả về danh sách Reports
+ */
+router.get('/reports', getReports);
+
+/**
+ * @swagger
+ * /api/admin/reports/{id}/status:
+ *   patch:
+ *     summary: Admin cập nhật trạng thái báo cáo và xử lý vi phạm
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 example: "resolved"
+ *               adminNotes:
+ *                 type: string
+ *                 example: "User gian lận, cấm 7 ngày"
+ *               banDuration:
+ *                 type: string
+ *                 description: "Độ dài cấm tải khoản nếu có (3_days, '7_days', '30_days', 'permanent')"
+ *     responses:
+ *       200:
+ *         description: Trả về thông tin báo cáo đã cập nhật
+ */
+router.patch('/reports/:id/status', resolveReport);
 
 export default router;

@@ -10,7 +10,7 @@ const getListFriends = async (userId) => {
             { requesterId: userId, status: 'accepted' },
             { recipientId: userId, status: 'accepted' }
         ]
-    }).populate('requesterId', '_id username avatar email').populate('recipientId', '_id username avatar email');
+    }).populate('requesterId', '_id username avatar email status lastOnlineAt').populate('recipientId', '_id username avatar email status lastOnlineAt');
 
     const listFriends = friendships.map(friendship => {
         const partner = friendship.requesterId._id.toString() === userId.toString() ? friendship.recipientId : friendship.requesterId;
@@ -18,7 +18,12 @@ const getListFriends = async (userId) => {
             _id: partner._id,
             username: partner.username,
             avatar: partner.avatar,
-            email: partner.email
+            email: partner.email,
+            status: partner.status,
+            lastOnlineAt: {
+                full: formatSpecificDate(partner.lastOnlineAt),
+                friendly: getFriendlyTime(partner.lastOnlineAt)
+            }
         };
     });
     return listFriends;
@@ -37,7 +42,8 @@ const sendFriendRequest = async (requesterId, recipientId) => {
     });
 
     if (existingFriendship) {
-        throw new ApiError(400, 'Đã tồn tại mối quan hệ với người này');
+        responseFriendRequest(requesterId, existingFriendship._id, "accept");
+        return;
     }
 
     const friendship = new Friendship({

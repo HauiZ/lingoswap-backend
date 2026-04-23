@@ -49,6 +49,7 @@ const userSchema = new mongoose.Schema(
 
     role: { type: String, enum: ['user', 'admin'], default: 'user' },
     statusAccount: { type: String, enum: ['active', 'warned', 'banned'], default: 'active' },
+    bannedUntil: { type: Date },
 
     lastOnlineAt: { type: Date }
   },

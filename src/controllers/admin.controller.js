@@ -39,8 +39,35 @@ const deleteUser = async (req, res) => {
   }
 };
 
+const getReports = async (req, res) => {
+  try {
+    const { status, limit, page } = req.query;
+    const reports = await adminService.getAllReports(status, limit, page);
+    logger.log('Admin lấy danh sách báo cáo');
+    res.json(reports);
+  } catch (error) {
+    logger.error(error.message);
+    res.status(error.statusCode || 500).json({ error: error.message || 'Lỗi lấy danh sách báo cáo' });
+  }
+};
+
+const resolveReport = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const adminId = req.user.id;
+    const report = await adminService.resolveReport(id, adminId, req.body);
+    logger.log(`Admin ${adminId} đã xử lý báo cáo ID: ${id}`);
+    res.json({ message: 'Đã cập nhật trạng thái báo cáo', report });
+  } catch (error) {
+    logger.error(error.message);
+    res.status(error.statusCode || 500).json({ error: error.message || 'Lỗi khi xử lý báo cáo' });
+  }
+};
+
 export {
   getAllUsers,
   banUser,
   deleteUser,
+  getReports,
+  resolveReport
 };

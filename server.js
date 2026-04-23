@@ -7,6 +7,7 @@ import env from './src/config/env.js';
 import redis from './src/config/redis.js';
 import { handleChatProvider } from './src/sockets/chatHandler.js';
 import { startLastOnlineWorker } from './src/workers/syncLastOnline.js';
+import { startUnbanWorker } from './src/workers/unbanWorker.js';
 import User from './src/models/User.js';
 
 const PORT = env.PORT || 5000;
@@ -44,4 +45,5 @@ httpServer.listen(PORT, () => {
   console.log(` Server đang chạy tại http://localhost:${PORT}`);
   console.log(` Swagger: http://localhost:${PORT}/api-docs`);
   startLastOnlineWorker();
+  startUnbanWorker();
 });

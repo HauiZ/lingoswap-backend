@@ -1,9 +1,23 @@
 import express from 'express';
 const router = express.Router();
-import { getAllUsers, banUser, deleteUser, getReports, resolveReport } from '../controllers/admin.controller.js';
+import { getAllUsers, banUser, deleteUser, getReports, resolveReport, getDashboard } from '../controllers/admin.controller.js';
 import { authenticateToken, authorizeRoles } from '../middlewares/auth.js';
 
 router.use(authenticateToken, authorizeRoles('admin'));
+
+/**
+ * @swagger
+ * /api/admin/dashboard:
+ *   get:
+ *     summary: Lấy thống kê tổng quan hệ thống (Dashboard)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Trả về toàn bộ số liệu thống kê của hệ thống
+ */
+router.get('/dashboard', getDashboard);
 
 /**
  * @swagger

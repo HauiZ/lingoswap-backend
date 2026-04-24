@@ -261,6 +261,22 @@ Dành riêng cho quản trị viên, yêu cầu `🔒 Admin Token`.
 - **Responses:**
   - `200 OK`: `{ "message": "Đã xóa user có ID: {id} vĩnh viễn" }`
 
+### 3.4 Lấy thống kê Dashboard
+- **Method:** `GET`
+- **Endpoint:** `/api/admin/dashboard`
+- **Responses:**
+  - `200 OK`:
+    ```json
+    {
+      "users": { "total": 100, "active": 90, "banned": 10, "online": 5, "newToday": 2, "newThisWeek": 15, "newThisMonth": 40 },
+      "matchSessions": { "total": 200, "today": 10, "thisWeek": 50, "avgDurationSeconds": 120, "totalDurationSeconds": 24000 },
+      "messages": { "total": 5000, "today": 100, "thisWeek": 700 },
+      "reports": { "total": 20, "pending": 5, "resolved": 15, "today": 1 },
+      "friendships": { "total": 30 },
+      "charts": { "newUsersLast7Days": [...], "sessionsLast7Days": [...] }
+    }
+    ```
+
 ---
 
 ## 4. Conversation APIs (`/api/user/conversations`)
@@ -305,12 +321,28 @@ Quản lý lịch sử và tin nhắn trong ứng dụng.
         "conversationId": "conv_id",
         "senderId": "sender_id",
         "content": "Noi dung tin nhan",
+        "type": "text",
         "createdAt": {
            "full": "10/05/2023 10:30",
            "friendly": "1 phút trước"
         }
       }
     ]
+    ```
+
+### 4.3 Upload ảnh chat `🔒 Yêu cầu Token`
+- **Method:** `POST`
+- **Endpoint:** `/api/user/conversations/upload-image`
+- **Request Body:** Form-Data (`multipart/form-data`) - Chứa field `image` (file ảnh) và `partnerId` (bắt buộc), `matchSessionId` (tùy chọn).
+- **Responses:**
+  - `201 Created`: Trả về Message object đã lưu DB (chứa URL ảnh). Đối phương sẽ tự nhận được ảnh qua Socket.
+    ```json
+    {
+       "_id": "...",
+       "content": "https://res.cloudinary.com/...",
+       "type": "image",
+       "conversationId": "..."
+    }
     ```
 
 ---
@@ -415,10 +447,52 @@ Lịch sử cuộc gọi và ghép cặp (Match Session History).
 
 ---
 
-## 7. Socket.IO EVENTS
-Danh sách các sự kiện Socket phục vụ ghép cặp ngẫu nhiên, gọi bạn bè, nhắn tin và gọi video (WebRTC). (Client dùng websocket `socket.emit` và `socket.on`).
+## 7. Notification APIs (`/api/user/notifications`)
+Quản lý thông báo người dùng.
 
-### 7.1 Lướt ngẫu nhiên (Random Match)
+### 7.1 Lấy danh sách thông báo `🔒 Yêu cầu Token`
+- **Method:** `GET`
+- **Endpoint:** `/api/user/notifications`
+- **Query Parameters (Tuỳ chọn):** `?limit=20&page=1`
+- **Responses:**
+  - `200 OK`: 
+    ```json
+    [
+      {
+        "_id": "notif_id",
+        "type": "friend_request",
+        "content": "User A đã gửi cho bạn lời mời kết bạn.",
+        "isRead": false,
+        "senderId": { "_id": "...", "profile": { "fullName": "User A", "avatar": "..." } },
+        "metadata": { "friendshipId": "..." }
+      }
+    ]
+    ```
+
+### 7.2 Đếm số thông báo chưa đọc `🔒 Yêu cầu Token`
+- **Method:** `GET`
+- **Endpoint:** `/api/user/notifications/unread-count`
+- **Responses:**
+  - `200 OK`: `{ "unreadCount": 5 }`
+
+### 7.3 Đánh dấu 1 thông báo đã đọc `🔒 Yêu cầu Token`
+- **Method:** `PATCH`
+- **Endpoint:** `/api/user/notifications/{notificationId}/read`
+- **Responses:**
+  - `200 OK`: `{ "message": "Đã đánh dấu đã đọc" }`
+
+### 7.4 Đánh dấu tất cả thông báo đã đọc `🔒 Yêu cầu Token`
+- **Method:** `PATCH`
+- **Endpoint:** `/api/user/notifications/read-all`
+- **Responses:**
+  - `200 OK`: `{ "message": "Đã đánh dấu tất cả đã đọc" }`
+
+---
+
+## 8. Socket.IO EVENTS
+Danh sách các sự kiện Socket phục vụ ghép cặp ngẫu nhiên, gọi bạn bè, nhắn tin, gọi video (WebRTC), trạng thái online và thông báo.
+
+### 8.1 Lướt ngẫu nhiên (Random Match)
 - **`[EMIT]` join_queue**: Gửi yêu cầu ghép cặp ngẫu nhiên.
   - *Payload*: `{ "language": "vi" }`
 - **`[EMIT]` leave_queue**: Thoát hàng chờ hoặc thoát khỏi phòng match hiện tại.
@@ -429,7 +503,7 @@ Danh sách các sự kiện Socket phục vụ ghép cặp ngẫu nhiên, gọi 
 - **`[ON]` match_found**: Ghép cặp hoặc cuộc gọi trực tiếp thành công!
   - *Payload*: `{ "sessionId": "id_phong", "partnerId": "id_đối_phương" }`
 
-### 7.2 Gọi thân thiết (Direct Intentional Matching)
+### 8.2 Gọi thân thiết (Direct Intentional Matching)
 - **`[EMIT]` direct_match_request**: Yêu cầu gọi điện tới một người bạn.
   - *Payload*: `{ "targetUserId": "user_id_người_muốn_gọi" }`
 - **`[EMIT]` direct_match_response**: Phản hồi (Bắt máy / Từ chối).
@@ -441,7 +515,7 @@ Danh sách các sự kiện Socket phục vụ ghép cặp ngẫu nhiên, gọi 
 - **`[ON]` direct_match_error**: Các lỗi như đối phương offline, lỗi đồng ý kết nối.
   - *Payload*: `{ "message": "Đối tác hiện đang offline." }`
 
-### 7.3 WebRTC (Truyền tải âm thanh / Video P2P)
+### 8.3 WebRTC (Truyền tải âm thanh / Video P2P)
 Sử dụng chung các luồng sau cho WebRTC, truyền tải dữ liệu P2P trong thời gian thực khi đã ở chung 1 phòng gọi.
 - **`[EMIT / ON]` webrtc_offer**: Truyền và Lắng nghe SDP Offer.
   - *Payload*: `{ "sessionId": "id_phong", "offer": { type: "offer", sdp: "..." } }`
@@ -450,13 +524,14 @@ Sử dụng chung các luồng sau cho WebRTC, truyền tải dữ liệu P2P tr
 - **`[EMIT / ON]` webrtc_ice_candidate**: Gửi các đường rẽ mạng ICE.
   - *Payload*: `{ "sessionId": "id_phong", "candidate": { ... } }`
 
-### 7.4 Chat theo thời gian thực (Messaging)
+### 8.4 Chat theo thời gian thực (Messaging)
 - **`[EMIT]` send_message**: Gửi một tin nhắn.
   - *Payload*:
     ```json
     {
       "partnerId": "id_người_nhận",
       "content": "Nội dung chat",
+      "type": "text", // Hoặc "image"
       "matchSessionId": "id_phong" // (Bỏ trống hoặc null nếu là nhắn riêng bên ngoài với bạn bè)
     }
     ```
@@ -468,6 +543,19 @@ Sử dụng chung các luồng sau cho WebRTC, truyền tải dữ liệu P2P tr
     {
       "_id": "message_id",
       "content": "Nội dung chat",
+      "type": "text",
       "conversationId": "..."
+    }
+    ```
+
+### 8.5 Thông báo (Notifications)
+- **`[ON]` new_notification**: Nhận thông báo mới theo thời gian thực (realtime push).
+  - *Payload*:
+    ```json
+    {
+      "_id": "notif_id",
+      "type": "friend_request", // Hoặc friend_accepted, report_new, account_banned, etc.
+      "content": "Nội dung thông báo",
+      "senderId": { "profile": { "fullName": "..." } }
     }
     ```

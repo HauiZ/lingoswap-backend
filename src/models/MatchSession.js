@@ -18,7 +18,7 @@ const matchSessionSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: ['finding', 'matched', 'ongoing', 'completed', 'cancelled'],
-      default: 'matched'
+      default: 'finding'
     },
     startedAt: { type: Date, default: Date.now },
     endedAt: { type: Date },

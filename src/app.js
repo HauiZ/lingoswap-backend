@@ -12,6 +12,7 @@ import conversationRoutes from './routes/conversation.routes.js';
 import friendRoutes from './routes/friend.routes.js';
 import matchSessionRoutes from './routes/matchSession.routes.js';
 import reportRoutes from './routes/report.routes.js';
+import notificationRoutes from './routes/notification.routes.js';
 import errorHandler from './middlewares/errorHandler.js';
 import env from './config/env.js';
 
@@ -56,6 +57,7 @@ app.use('/api/user/conversations', conversationRoutes);
 app.use('/api/user/friends', friendRoutes);
 app.use('/api/user/matches', matchSessionRoutes);
 app.use('/api/user/reports', reportRoutes);
+app.use('/api/user/notifications', notificationRoutes);
 
 // Home route
 

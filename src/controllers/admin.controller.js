@@ -64,10 +64,22 @@ const resolveReport = async (req, res) => {
   }
 };
 
+const getDashboard = async (req, res) => {
+  try {
+    const stats = await adminService.getDashboardStats();
+    logger.log('Admin: Lấy dữ liệu dashboard');
+    res.json(stats);
+  } catch (error) {
+    logger.error(error.message);
+    res.status(error.statusCode || 500).json({ error: error.message || 'Lỗi khi lấy dữ liệu dashboard' });
+  }
+};
+
 export {
   getAllUsers,
   banUser,
   deleteUser,
   getReports,
-  resolveReport
+  resolveReport,
+  getDashboard
 };

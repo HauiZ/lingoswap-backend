@@ -1,5 +1,9 @@
 import User from '../models/User.js';
 import Report from '../models/Report.js';
+import Message from '../models/Message.js';
+import MatchSession from '../models/MatchSession.js';
+import Friendship from '../models/Friendship.js';
+import redis from '../config/redis.js';
 import ApiError from '../utils/ApiError.js';
 import sendEmail from '../utils/sendEmail.js';
 import renderEmailTemplate from '../utils/emailTemplate.js';
@@ -120,10 +124,129 @@ const resolveReport = async (reportId, adminId, payload) => {
     return report;
 };
 
+const getDashboardStats = async () => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const thisWeek = new Date(today);
+    thisWeek.setDate(thisWeek.getDate() - 7);
+    const thisMonth = new Date(today);
+    thisMonth.setDate(thisMonth.getDate() - 30);
+
+    // --- 1. Thống kê Người dùng ---
+    const [totalUsers, activeUsers, bannedUsers, newUsersToday, newUsersWeek, newUsersMonth] = await Promise.all([
+        User.countDocuments(),
+        User.countDocuments({ statusAccount: 'active' }),
+        User.countDocuments({ statusAccount: 'banned' }),
+        User.countDocuments({ createdAt: { $gte: today } }),
+        User.countDocuments({ createdAt: { $gte: thisWeek } }),
+        User.countDocuments({ createdAt: { $gte: thisMonth } })
+    ]);
+
+    // Online users (quét Redis presence keys)
+    let onlineUsers = 0;
+    try {
+        const keys = await redis.keys('presence:*');
+        onlineUsers = keys.length;
+    } catch (e) { /* Redis error */ }
+
+    // --- 2. Thống kê Phiên gọi (Match Sessions) ---
+    const [totalSessions, sessionsToday, sessionsWeek, avgDurationResult] = await Promise.all([
+        MatchSession.countDocuments({ status: { $in: ['completed', 'cancelled'] }, durationSeconds: { $gt: 0 } }),
+        MatchSession.countDocuments({ createdAt: { $gte: today }, status: { $in: ['completed', 'cancelled'] }, durationSeconds: { $gt: 0 } }),
+        MatchSession.countDocuments({ createdAt: { $gte: thisWeek }, status: { $in: ['completed', 'cancelled'] }, durationSeconds: { $gt: 0 } }),
+        MatchSession.aggregate([
+            { $match: { status: { $in: ['completed', 'cancelled'] }, durationSeconds: { $gt: 0 } } },
+            { $group: { _id: null, avgDuration: { $avg: '$durationSeconds' }, totalDuration: { $sum: '$durationSeconds' } } }
+        ])
+    ]);
+    const avgDuration = avgDurationResult[0] ? Math.round(avgDurationResult[0].avgDuration) : 0;
+    const totalDuration = avgDurationResult[0] ? avgDurationResult[0].totalDuration : 0;
+
+    // --- 3. Thống kê Tin nhắn ---
+    const [totalMessages, messagesToday, messagesWeek] = await Promise.all([
+        Message.countDocuments(),
+        Message.countDocuments({ createdAt: { $gte: today } }),
+        Message.countDocuments({ createdAt: { $gte: thisWeek } })
+    ]);
+
+    // --- 4. Thống kê Báo cáo ---
+    const [totalReports, pendingReports, resolvedReports, reportsToday] = await Promise.all([
+        Report.countDocuments(),
+        Report.countDocuments({ status: 'pending' }),
+        Report.countDocuments({ status: 'resolved' }),
+        Report.countDocuments({ createdAt: { $gte: today } })
+    ]);
+
+    // --- 5. Thống kê Kết bạn ---
+    const totalFriendships = await Friendship.countDocuments({ status: 'accepted' });
+
+    // --- 6. Biểu đồ người dùng mới 7 ngày gần nhất ---
+    const newUsersChart = await User.aggregate([
+        { $match: { createdAt: { $gte: thisWeek } } },
+        {
+            $group: {
+                _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+                count: { $sum: 1 }
+            }
+        },
+        { $sort: { _id: 1 } }
+    ]);
+
+    // --- 7. Biểu đồ phiên gọi 7 ngày gần nhất ---
+    const sessionsChart = await MatchSession.aggregate([
+        { $match: { createdAt: { $gte: thisWeek }, status: { $in: ['completed', 'cancelled'] }, durationSeconds: { $gt: 0 } } },
+        {
+            $group: {
+                _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+                count: { $sum: 1 }
+            }
+        },
+        { $sort: { _id: 1 } }
+    ]);
+
+    return {
+        users: {
+            total: totalUsers,
+            active: activeUsers,
+            banned: bannedUsers,
+            online: onlineUsers,
+            newToday: newUsersToday,
+            newThisWeek: newUsersWeek,
+            newThisMonth: newUsersMonth
+        },
+        matchSessions: {
+            total: totalSessions,
+            today: sessionsToday,
+            thisWeek: sessionsWeek,
+            avgDurationSeconds: avgDuration,
+            totalDurationSeconds: totalDuration
+        },
+        messages: {
+            total: totalMessages,
+            today: messagesToday,
+            thisWeek: messagesWeek
+        },
+        reports: {
+            total: totalReports,
+            pending: pendingReports,
+            resolved: resolvedReports,
+            today: reportsToday
+        },
+        friendships: {
+            total: totalFriendships
+        },
+        charts: {
+            newUsersLast7Days: newUsersChart,
+            sessionsLast7Days: sessionsChart
+        }
+    };
+};
+
 export default {
     getAllUsers,
     banUser,
     deleteUser,
     getAllReports,
-    resolveReport
+    resolveReport,
+    getDashboardStats
 };

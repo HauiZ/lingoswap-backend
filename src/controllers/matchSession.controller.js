@@ -23,7 +23,19 @@ const getMatchSessionDetails = async (req, res) => {
     }
 };
 
+const createReview = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { sessionId } = req.params;
+        const review = await matchSessionService.createReview(userId, sessionId, req.body);
+        res.status(201).json({ message: "Đánh giá phiên gọi thành công", review });
+    } catch (error) {
+        res.status(error.statusCode || 500).json({ error: error.message || "Lỗi khi gửi đánh giá" });
+    }
+};
+
 export {
     getMatchHistory,
-    getMatchSessionDetails
+    getMatchSessionDetails,
+    createReview
 };

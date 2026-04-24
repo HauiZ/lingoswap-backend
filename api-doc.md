@@ -445,6 +445,37 @@ Lịch sử cuộc gọi và ghép cặp (Match Session History).
     ```
   - `400/500 Lỗi`: `{ "error": "Phiên gọi không tồn tại hoặc Không có quyền truy cập." }`
 
+### 6.3 Đánh giá phiên gọi và người bạn ghép cặp `🔒 Yêu cầu Token`
+- **Method:** `POST`
+- **Endpoint:** `/api/user/matches/{sessionId}/review`
+- **Path Parameters:** `sessionId` = ID của phiên gọi.
+- **Request Body (JSON):**
+  ```json
+  {
+    "rating": 5,
+    "comment": "Rất vui vẻ và thân thiện"
+  }
+  ```
+- **Responses:**
+  - `201 Created`: 
+    ```json
+    {
+      "message": "Đánh giá phiên gọi thành công",
+      "review": {
+        "_id": "review_id",
+        "reviewerId": "...",
+        "targetUserId": "...",
+        "matchSessionId": "...",
+        "rating": 5,
+        "comment": "Rất vui vẻ và thân thiện",
+        "createdAt": "..."
+      }
+    }
+    ```
+  - `400 Bad Request`: `{ "error": "Bạn đã đánh giá phiên gọi này rồi." }` hoặc `{ "error": "Đánh giá phải từ 1 đến 5 sao." }`
+  - `403 Forbidden`: `{ "error": "Bạn không có quyền đánh giá phiên gọi này." }`
+  - `404 Not Found`: `{ "error": "Phiên gọi không tồn tại." }`
+
 ---
 
 ## 7. Notification APIs (`/api/user/notifications`)

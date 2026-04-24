@@ -10,7 +10,7 @@ const storage = new CloudinaryStorage({
   }
 });
 
-const uploadAvatar = multer({ storage: storage });
+const uploadImage = multer({ storage: storage });
 
 const chatImageStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
@@ -26,4 +26,4 @@ const uploadChatImage = multer({
   limits: { fileSize: 5 * 1024 * 1024 }
 });
 
-export { uploadAvatar, uploadChatImage };
+export { uploadImage, uploadChatImage };

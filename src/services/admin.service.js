@@ -2,6 +2,7 @@ import User from '../models/User.js';
 import Report from '../models/Report.js';
 import ApiError from '../utils/ApiError.js';
 import sendEmail from '../utils/sendEmail.js';
+import renderEmailTemplate from '../utils/emailTemplate.js';
 
 const getAllUsers = async () => {
     return await User.find().select('-password -__v').sort({ createdAt: -1 });
@@ -17,11 +18,17 @@ const banUser = async (id) => {
     await user.save();
 
     try {
+        const html = renderEmailTemplate('banned', {
+            fullName: user.profile.fullName,
+            banDuration: 'Khóa vĩnh viễn',
+            reason: 'Vi phạm Tiêu chuẩn Cộng đồng LingoSwap.',
+            bannedUntil: 'Không có ngày mở khóa'
+        });
         await sendEmail({
             email: user.email,
             subject: 'Thông báo: Khóa tài khoản LingoSwap',
-            message: `Chào ${user.profile.fullName},\n\nTài khoản của bạn đã bị khóa vĩnh viễn do vi phạm Tiêu chuẩn cộng đồng.\n\nTrân trọng,\nĐội ngũ LingoSwap`,
-            html: `<h3>Chào ${user.profile.fullName},</h3><p>Tài khoản của bạn đã bị khóa <b>vĩnh viễn</b> do vi phạm Tiêu chuẩn cộng đồng.</p><p>Trân trọng,<br>Đội ngũ LingoSwap</p>`
+            message: `Tài khoản của bạn đã bị khóa vĩnh viễn.`,
+            html
         });
     } catch (e) {
         console.error("Không thể gửi email thông báo ban:", e.message);
@@ -83,17 +90,25 @@ const resolveReport = async (reportId, adminId, payload) => {
             // Gửi email thông báo
             try {
                 const isPermanent = banDuration === 'permanent';
-                const durationText = isPermanent 
-                    ? 'vĩnh viễn' 
-                    : `tạm thời cho đến ${reportedUser.bannedUntil.toLocaleString('vi-VN')}`;
-                
-                const reasonText = adminNotes ? `Lý do cụ thể: ${adminNotes}` : 'Vi phạm quy tắc cộng đồng.';
+                const durationMap = { '3_days': '3 ngày', '7_days': '7 ngày', '30_days': '30 ngày', 'permanent': 'Vĩnh viễn' };
+                const durationText = durationMap[banDuration] || banDuration;
+                const bannedUntilText = isPermanent
+                    ? 'Không có ngày mở khóa'
+                    : reportedUser.bannedUntil.toLocaleString('vi-VN');
+                const reasonText = adminNotes || 'Vi phạm quy tắc cộng đồng.';
+
+                const html = renderEmailTemplate('banned', {
+                    fullName: reportedUser.profile.fullName,
+                    banDuration: `Tạm khóa ${durationText}`,
+                    reason: reasonText,
+                    bannedUntil: bannedUntilText
+                });
 
                 await sendEmail({
                     email: reportedUser.email,
                     subject: 'Thông báo: Khóa tài khoản LingoSwap do vi phạm',
-                    message: `Chào ${reportedUser.profile.fullName},\n\nTài khoản của bạn đã bị khóa ${durationText} do có báo cáo vi phạm.\n\n${reasonText}\n\nTrân trọng,\nĐội ngũ LingoSwap`,
-                    html: `<h3>Chào ${reportedUser.profile.fullName},</h3><p>Tài khoản của bạn đã bị khóa <b>${durationText}</b> do có báo cáo vi phạm được xác thực.</p><p><b>${reasonText}</b></p><p>Trân trọng,<br>Đội ngũ LingoSwap</p>`
+                    message: `Tài khoản của bạn đã bị khóa ${durationText} do: ${reasonText}`,
+                    html
                 });
             } catch (e) {
                 console.error("Lỗi khi gửi email report ban:", e.message);

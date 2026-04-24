@@ -10,6 +10,20 @@ const storage = new CloudinaryStorage({
   }
 });
 
-const upload = multer({ storage: storage });
+const uploadAvatar = multer({ storage: storage });
 
-export default upload;
+const chatImageStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'lingoswap/chat',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+    transformation: [{ width: 1200, crop: 'limit', quality: 'auto' }]
+  }
+});
+
+const uploadChatImage = multer({
+  storage: chatImageStorage,
+  limits: { fileSize: 5 * 1024 * 1024 }
+});
+
+export { uploadAvatar, uploadChatImage };

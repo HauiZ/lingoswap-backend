@@ -22,7 +22,8 @@ const io = new Server(httpServer, {
   }
 });
 
-io.use(socketAuth); // Mở ra khi bạn đã có JWT logic
+io.use(socketAuth);
+app.set('io', io); // Cho phép controller HTTP truy cập socket instance
 
 io.on('connection', async (socket) => {
 

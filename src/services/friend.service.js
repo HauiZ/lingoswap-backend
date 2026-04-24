@@ -10,14 +10,14 @@ const getListFriends = async (userId) => {
             { requesterId: userId, status: 'accepted' },
             { recipientId: userId, status: 'accepted' }
         ]
-    }).populate('requesterId', '_id username avatar email status lastOnlineAt').populate('recipientId', '_id username avatar email status lastOnlineAt');
+    }).populate('requesterId', '_id profile email status lastOnlineAt').populate('recipientId', '_id profile email status lastOnlineAt');
 
     const listFriends = friendships.map(friendship => {
         const partner = friendship.requesterId._id.toString() === userId.toString() ? friendship.recipientId : friendship.requesterId;
         return {
             _id: partner._id,
-            username: partner.username,
-            avatar: partner.avatar,
+            username: partner.profile.fullName,
+            avatar: partner.profile.avatar,
             email: partner.email,
             status: partner.status,
             lastOnlineAt: {

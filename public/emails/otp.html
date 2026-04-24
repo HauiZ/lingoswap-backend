@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mã OTP - LingoSwap</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f7fa;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f7fa;padding:40px 0;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+          
+          <!-- Header -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:40px 40px 32px;text-align:center;">
+              <div style="font-size:32px;margin-bottom:8px;">🌐</div>
+              <h1 style="color:#ffffff;font-size:24px;margin:0;font-weight:700;letter-spacing:-0.5px;">LingoSwap</h1>
+              <p style="color:rgba(255,255,255,0.85);font-size:14px;margin:8px 0 0;">Nền tảng trao đổi ngôn ngữ trực tuyến</p>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding:40px;">
+              <h2 style="color:#1a1a2e;font-size:20px;margin:0 0 8px;font-weight:600;">Xác minh tài khoản của bạn</h2>
+              <p style="color:#64748b;font-size:15px;line-height:1.6;margin:0 0 28px;">
+                Chào <strong style="color:#334155;">{{fullName}}</strong>,<br>
+                Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản LingoSwap của bạn. Vui lòng sử dụng mã OTP bên dưới để tiếp tục:
+              </p>
+
+              <!-- OTP Code -->
+              <div style="background:linear-gradient(135deg,#f8fafc,#eef2ff);border:2px dashed #667eea;border-radius:12px;padding:24px;text-align:center;margin-bottom:28px;">
+                <p style="color:#64748b;font-size:13px;margin:0 0 8px;text-transform:uppercase;letter-spacing:1.5px;font-weight:600;">Mã xác thực OTP</p>
+                <p style="color:#667eea;font-size:36px;font-weight:800;letter-spacing:8px;margin:0;font-family:'Courier New',monospace;">{{otpCode}}</p>
+              </div>
+
+              <!-- Warning -->
+              <div style="background:#fef3c7;border-left:4px solid #f59e0b;border-radius:0 8px 8px 0;padding:14px 16px;margin-bottom:28px;">
+                <p style="color:#92400e;font-size:13px;margin:0;line-height:1.5;">
+                  ⏰ Mã này sẽ <strong>hết hạn sau 5 phút</strong>. Không chia sẻ mã này với bất kỳ ai.
+                </p>
+              </div>
+
+              <p style="color:#94a3b8;font-size:13px;line-height:1.6;margin:0;">
+                Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này. Tài khoản của bạn vẫn an toàn.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background:#f8fafc;padding:24px 40px;border-top:1px solid #e2e8f0;text-align:center;">
+              <p style="color:#94a3b8;font-size:12px;margin:0 0 4px;">© 2026 LingoSwap. All rights reserved.</p>
+              <p style="color:#cbd5e1;font-size:11px;margin:0;">Email này được gửi tự động, vui lòng không phản hồi.</p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

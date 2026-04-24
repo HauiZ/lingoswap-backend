@@ -1,6 +1,7 @@
 import express from 'express';
-import { getMessagesByConversation, getAllConversation } from '../controllers/conversation.controller.js';
+import { getMessagesByConversation, getAllConversation, sendImageMessage } from '../controllers/conversation.controller.js';
 import { authenticateToken } from '../middlewares/auth.js';
+import { uploadChatImage } from '../middlewares/upload.js';
 
 const router = express.Router();
 
@@ -37,5 +38,42 @@ router.get('/all', authenticateToken, getAllConversation);
  *         description: Danh sách tin nhắn
  */
 router.get('/:conversationId', authenticateToken, getMessagesByConversation);
+
+/**
+ * @swagger
+ * /api/user/conversations/upload-image:
+ *   post:
+ *     summary: Upload ảnh chat lên Cloudinary, trả về URL để gửi qua socket
+ *     tags: [Messages]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Trả về URL của ảnh đã upload
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 imageUrl:
+ *                   type: string
+ *                   example: "https://res.cloudinary.com/..."
+ */
+router.post(
+    '/upload-image',
+    authenticateToken,
+    uploadChatImage.single('image'),
+    sendImageMessage
+);
 
 export default router;

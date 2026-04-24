@@ -2,7 +2,7 @@ import express from 'express';
 const router = express.Router();
 import { getMyProfile, getUserById, updateMyProfile, uploadAvatar } from '../controllers/user.controller.js';
 import { authenticateToken } from '../middlewares/auth.js';
-import upload from '../middlewares/upload.js';
+import { uploadAvatar } from '../middlewares/upload.js';
 
 /**
  * @swagger
@@ -92,6 +92,6 @@ router.put('/me', authenticateToken, updateMyProfile);
  *       400:
  *         description: Vui lòng cung cấp file ảnh
  */
-router.post('/avatar', authenticateToken, upload.single('avatar'), uploadAvatar);
+router.post('/avatar', authenticateToken, uploadAvatar.single('avatar'), uploadAvatar);
 
 export default router;

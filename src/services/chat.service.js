@@ -1,14 +1,8 @@
 import Message from '../models/Message.js';
 import Conversation from '../models/Conversation.js';
 
-/**
- * Service to handle saving a chat message and managing conversation state
- */
 export const saveMessageService = async ({ senderId, partnerId, content, matchSessionId, type = 'text' }) => {
-    // 1. Find existing conversation or create a new one
     let query = { participants: { $all: [senderId, partnerId] } };
-    
-    // Phân tách phòng chat matching (có ID phòng) và chat bạn bè (ID phòng null)
     if (matchSessionId) {
         query.matchSessionId = matchSessionId;
     } else {
@@ -21,11 +15,10 @@ export const saveMessageService = async ({ senderId, partnerId, content, matchSe
         conversation = await Conversation.create({
             participants: [senderId, partnerId],
             matchSessionId: matchSessionId || null,
-            isPermanent: !matchSessionId // Trở thành chat lâu dài nếu không thuộc về 1 phòng match nào
+            isPermanent: !matchSessionId
         });
     }
 
-    // 2. Create the message
     const newMessage = await Message.create({
         conversationId: conversation._id,
         senderId,
@@ -33,18 +26,51 @@ export const saveMessageService = async ({ senderId, partnerId, content, matchSe
         type
     });
 
-    // 3. Update the conversation's last message and last updated time
     await Conversation.findByIdAndUpdate(conversation._id, {
         lastMessage: newMessage._id,
         updatedAt: Date.now()
     });
 
-    // 4. Return the structured data to be emitted to sockets
     return {
         messageData: {
             ...newMessage.toObject(),
             conversationId: conversation._id
         },
+        newMessage
+    };
+};
+
+/**
+ * Lưu tin nhắn kiểu hình ảnh vào DB sau khi đã upload lên Cloudinary
+ * imageUrl: được Cloudinary trả về từ middleware multer
+ */
+export const saveImageMessageService = async ({ senderId, partnerId, imageUrl, matchSessionId }) => {
+    let query = { participants: { $all: [senderId, partnerId] } };
+    query.matchSessionId = matchSessionId || null;
+
+    let conversation = await Conversation.findOne(query);
+    if (!conversation) {
+        conversation = await Conversation.create({
+            participants: [senderId, partnerId],
+            matchSessionId: matchSessionId || null,
+            isPermanent: !matchSessionId
+        });
+    }
+
+    const newMessage = await Message.create({
+        conversationId: conversation._id,
+        senderId,
+        content: imageUrl,   // lưu URL ảnh làm nội dung
+        type: 'image'
+    });
+
+    await Conversation.findByIdAndUpdate(conversation._id, {
+        lastMessage: newMessage._id,
+        updatedAt: Date.now()
+    });
+
+    return {
+        messageData: { ...newMessage.toObject(), conversationId: conversation._id },
         newMessage
     };
 };

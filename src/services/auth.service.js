@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import env from '../config/env.js';
 import sendEmail from '../utils/sendEmail.js';
+import renderEmailTemplate from '../utils/emailTemplate.js';
 import ApiError from '../utils/ApiError.js';
 import { validatePassword, validateEmail } from '../utils/validators.js';
 import { generateAccessToken } from '../utils/generateToken.js';
@@ -134,13 +135,19 @@ const forgotPassword = async ({ email }) => {
         expiresAt: new Date(Date.now() + 5 * 60 * 1000)
     });
 
-    const message = `Bạn đã yêu cầu đặt lại mật khẩu. \n\nMã OTP của bạn là: ${otp}. \n\nMã này sẽ hết hạn trong 10 phút.`;
+    const message = `Mã OTP của bạn là: ${otp}. Mã này sẽ hết hạn trong 5 phút.`;
+
+    const html = renderEmailTemplate('otp', {
+        fullName: user.profile.fullName,
+        otpCode: otp
+    });
 
     try {
         await sendEmail({
             email: user.email,
             subject: 'LingoSwap - Mã OTP Đặt Lại Mật Khẩu',
-            message: message,
+            message,
+            html
         });
         return user;
     } catch (err) {

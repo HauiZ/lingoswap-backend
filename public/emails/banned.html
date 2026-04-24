@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thông báo khóa tài khoản - LingoSwap</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f7fa;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f7fa;padding:40px 0;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+          
+          <!-- Header -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#ef4444 0%,#dc2626 100%);padding:40px 40px 32px;text-align:center;">
+              <div style="font-size:32px;margin-bottom:8px;">🚫</div>
+              <h1 style="color:#ffffff;font-size:24px;margin:0;font-weight:700;letter-spacing:-0.5px;">LingoSwap</h1>
+              <p style="color:rgba(255,255,255,0.85);font-size:14px;margin:8px 0 0;">Thông báo từ Hệ thống Quản trị</p>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding:40px;">
+              <h2 style="color:#1a1a2e;font-size:20px;margin:0 0 8px;font-weight:600;">Tài khoản của bạn đã bị tạm khóa</h2>
+              <p style="color:#64748b;font-size:15px;line-height:1.6;margin:0 0 28px;">
+                Chào <strong style="color:#334155;">{{fullName}}</strong>,<br>
+                Sau khi xem xét các báo cáo từ cộng đồng, chúng tôi nhận thấy tài khoản của bạn đã vi phạm <strong>Tiêu chuẩn Cộng đồng LingoSwap</strong>.
+              </p>
+
+              <!-- Ban Details -->
+              <div style="background:#fef2f2;border-radius:12px;padding:24px;margin-bottom:24px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td style="padding:0 0 12px;">
+                      <p style="color:#991b1b;font-size:12px;margin:0;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Mức độ xử lý</p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:0 0 16px;border-bottom:1px solid #fecaca;">
+                      <p style="color:#dc2626;font-size:18px;font-weight:700;margin:0;">{{banDuration}}</p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:16px 0 0;">
+                      <p style="color:#991b1b;font-size:12px;margin:0 0 4px;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Lý do</p>
+                      <p style="color:#7f1d1d;font-size:14px;margin:0;line-height:1.5;">{{reason}}</p>
+                    </td>
+                  </tr>
+                </table>
+              </div>
+
+              <!-- Expire info -->
+              <div style="background:#f0f9ff;border-left:4px solid #0284c7;border-radius:0 8px 8px 0;padding:14px 16px;margin-bottom:28px;">
+                <p style="color:#0c4a6e;font-size:13px;margin:0;line-height:1.5;">
+                  📅 <strong>Tài khoản sẽ được mở khóa vào:</strong> {{bannedUntil}}
+                </p>
+              </div>
+
+              <p style="color:#64748b;font-size:14px;line-height:1.6;margin:0 0 12px;">
+                Trong thời gian bị khóa, bạn sẽ không thể đăng nhập hoặc sử dụng các dịch vụ của LingoSwap.
+              </p>
+              <p style="color:#94a3b8;font-size:13px;line-height:1.6;margin:0;">
+                Nếu bạn cho rằng đây là một sai sót, vui lòng liên hệ đội ngũ hỗ trợ tại <a href="mailto:support@lingoswap.com" style="color:#667eea;text-decoration:none;font-weight:600;">support@lingoswap.com</a>.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background:#f8fafc;padding:24px 40px;border-top:1px solid #e2e8f0;text-align:center;">
+              <p style="color:#94a3b8;font-size:12px;margin:0 0 4px;">© 2026 LingoSwap. All rights reserved.</p>
+              <p style="color:#cbd5e1;font-size:11px;margin:0;">Email này được gửi tự động, vui lòng không phản hồi.</p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

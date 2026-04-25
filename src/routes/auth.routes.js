@@ -3,6 +3,8 @@ import express from 'express';
 const router = express.Router();
 import { register, login, googleLogin, facebookLogin, logout, refreshAccessToken, changePassword, forgotPassword, resetPassword } from '../controllers/auth.controller.js';
 import { authenticateToken } from '../middlewares/auth.js';
+import { createAdmin } from '../controllers/admin.controller.js';
+
 
 /**
  * @swagger
@@ -233,5 +235,39 @@ router.post('/password/forgot', forgotPassword);
  *         description: Mã OTP sai hoặc hết hạn
  */
 router.post('/password/reset', resetPassword);
+
+/**
+ * @swagger
+ * /api/auth/create:
+ *   post:
+ *     summary: Tạo tài khoản Admin mới (Chỉ Admin)
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *               - confirmPassword
+ *               - fullName
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               confirmPassword:
+ *                 type: string
+ *               fullName:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Tạo tài khoản Admin thành công
+ *       400:
+ *         description: Dữ liệu không hợp lệ
+ */
+router.post('/create', createAdmin);
 
 export default router;

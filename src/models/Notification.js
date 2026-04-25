@@ -17,10 +17,14 @@ const notificationSchema = new mongoose.Schema(
       enum: [
         'friend_request',        // Nhận lời mời kết bạn
         'friend_accepted',       // Lời mời kết bạn được chấp nhận
+        'friend_rejected',       // Lời mời kết bạn bị từ chối
         'report_new',            // Admin: có report mới
         'account_banned',        // User bị khóa tài khoản
         'account_unbanned',      // User được mở khóa tài khoản
-        'system'                 // Thông báo hệ thống chung
+        'system',                // Thông báo hệ thống chung
+        'report_handled',        // Admin: báo cáo đã được xử lý
+        'friendship_ended',      // Bạn bè hủy kết bạn
+        'responsed_friend_request', // Đã trả lời yêu cầu kết bạn
       ],
       required: true
     },

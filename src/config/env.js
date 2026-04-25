@@ -11,7 +11,7 @@ export const env = {
   JWT_REFRESH_EXPIRE: process.env.JWT_REFRESH_EXPIRE || '7d',
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID, // Thêm cho tính năng Login Google
   FACEBOOK_APP_ID: process.env.FACEBOOK_APP_ID,    // Thêm cho tính năng Login FB
-  FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:3000',
+  FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173',
   CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
   CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,

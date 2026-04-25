@@ -7,6 +7,8 @@ import redis from '../config/redis.js';
 import ApiError from '../utils/ApiError.js';
 import sendEmail from '../utils/sendEmail.js';
 import renderEmailTemplate from '../utils/emailTemplate.js';
+import bcrypt from 'bcryptjs';
+import { validateEmail, validatePassword } from '../utils/validators.js';
 
 const getAllUsers = async () => {
     return await User.find().select('-password -__v').sort({ createdAt: -1 });
@@ -242,11 +244,50 @@ const getDashboardStats = async () => {
     };
 };
 
+const createAdmin = async ({ email, password, confirmPassword, fullName }) => {
+    if (!email || !password || !confirmPassword || !fullName) {
+        throw new ApiError(400, 'Vui lòng cung cấp đầy đủ thông tin bắt buộc');
+    }
+
+    if (!validateEmail(email)) {
+        throw new ApiError(400, 'Email không hợp lệ');
+    }
+
+    if (!validatePassword(password)) {
+        throw new ApiError(400, 'Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt');
+    }
+
+    if (password !== confirmPassword) {
+        throw new ApiError(400, 'Mật khẩu không khớp');
+    }
+
+    const userExists = await User.findOne({ email });
+    if (userExists) {
+        throw new ApiError(400, 'Email đã được sử dụng');
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const admin = await User.create({
+        email,
+        password: hashedPassword,
+        role: 'admin',
+        profile: {
+            fullName,
+            country: 'vn' // Default country for admin
+        }
+    });
+
+    return admin;
+};
+
 export default {
     getAllUsers,
     banUser,
     deleteUser,
     getAllReports,
     resolveReport,
-    getDashboardStats
+    getDashboardStats,
+    createAdmin
 };

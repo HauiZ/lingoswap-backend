@@ -1,6 +1,8 @@
 import Report from '../models/Report.js';
+import User from '../models/User.js';
+import notificationService from '../services/notification.service.js';
 
-const createReport = async (reporterId, payload) => {
+const createReport = async (reporterId, payload, io) => {
     const { reportedUserId, matchSessionId, conversationId, reason, evidenceMessageIds } = payload;
     
     if (!reportedUserId || !reason) {
@@ -20,6 +22,23 @@ const createReport = async (reporterId, payload) => {
     });
 
     await report.save();
+
+    if (io) {
+        try {
+            const reporter = await User.findById(reporterId).select('profile.fullName').lean();
+            if (reporter) {
+                await notificationService.notifyAllAdmins(io, {
+                    senderId: reporterId,
+                    type: 'report_new',
+                    content: `${reporter.profile.fullName} đã gửi một báo cáo vi phạm mới.`,
+                    metadata: { reportId: report._id }
+                });
+            }
+        } catch (e) {
+            console.error('Lỗi gửi notification cho admin:', e.message);
+        }
+    }
+
     return report;
 };
 

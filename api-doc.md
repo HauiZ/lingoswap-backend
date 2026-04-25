@@ -408,6 +408,19 @@ Mọi việc liên quan đến trạng thái gửi, nhận và quản lý bạn 
   - `200 OK`: `{ "message": "Đã hủy kết bạn" }`
   - `404 Not Found`: `{ "error": "Không tìm thấy quan hệ bạn bè này" }`
 
+### 5.5 Kiểm tra trạng thái bạn bè `🔒 Yêu cầu Token`
+- **Method:** `GET`
+- **Endpoint:** `/api/user/friends/friends/{targetUserId}/status`
+- **Path Parameters:** `targetUserId` = ID của người dùng cần kiểm tra.
+- **Responses:**
+  - `200 OK`: 
+    ```json
+    {
+      "status": "none", // Các trạng thái: "none", "friends", "request_sent", "request_received"
+      "friendshipId": "ID của yêu cầu nếu có, null nếu chưa từng kết bạn"
+    }
+    ```
+
 ---
 
 ## 6. Matches APIs (`/api/user/matches`)

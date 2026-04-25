@@ -42,7 +42,7 @@ const sendFriendRequest = async (requesterId, recipientId, io) => {
         ]
     });
 
-    if (existingFriendship) {
+    if (existingFriendship && existingFriendship.status === 'pending') {
         responseFriendRequest(requesterId, existingFriendship._id, "accept", io);
         return;
     }
@@ -225,10 +225,38 @@ const removeFriend = async (userId, friendId, io) => {
     return 'Đã hủy kết bạn';
 };
 
+const checkFriendshipStatus = async (userId, targetUserId) => {
+    const friendship = await Friendship.findOne({
+        $or: [
+            { requesterId: userId, recipientId: targetUserId },
+            { requesterId: targetUserId, recipientId: userId }
+        ]
+    });
+
+    if (!friendship || friendship.status === 'rejected') {
+        return { status: 'none', friendshipId: null };
+    }
+
+    if (friendship.status === 'accepted') {
+        return { status: 'friends', friendshipId: friendship._id };
+    }
+
+    if (friendship.status === 'pending') {
+        if (friendship.requesterId.toString() === userId.toString()) {
+            return { status: 'request_sent', friendshipId: friendship._id };
+        } else {
+            return { status: 'request_received', friendshipId: friendship._id };
+        }
+    }
+
+    return { status: friendship.status, friendshipId: friendship._id };
+};
+
 export default {
     getListFriends,
     sendFriendRequest,
     getFriendRequests,
     responseFriendRequest,
-    removeFriend
+    removeFriend,
+    checkFriendshipStatus
 };

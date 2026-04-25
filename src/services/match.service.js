@@ -65,11 +65,12 @@ export const leaveMatchAndQueueService = async (userId, currentLanguage) => {
         await redis.lrem(`queue:${currentLanguage}`, 0, userId);
     }
     
-    const activeSession = await MatchSession.findOneAndUpdate(
-        { participants: userId, status: 'ongoing' },
-        { status: 'completed', endedAt: new Date() },
-        { new: true }
-    );
+    let activeSession = await MatchSession.findOne({ participants: userId, status: 'ongoing' });
+    if (activeSession) {
+        activeSession.status = 'completed';
+        activeSession.endedAt = new Date();
+        await activeSession.save(); // Kích hoạt pre('save') middleware
+    }
 
     let partnerId = null;
     if (activeSession) {

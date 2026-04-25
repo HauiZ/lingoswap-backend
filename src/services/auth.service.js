@@ -187,16 +187,45 @@ const resetPassword = async ({ email, otp, newPassword }) => {
     return user;
 };
 
-const googleLogin = async ({ idToken }) => {
-    if (!idToken) {
-        throw new ApiError(400, 'Thiếu idToken');
+const googleLogin = async ({ idToken, accessToken }) => {
+    if (!idToken && !accessToken) {
+        throw new ApiError(400, 'Thiếu idToken hoặc accessToken của Google');
     }
 
-    const ticket = await googleClient.verifyIdToken({
-        idToken,
-        audience: env.GOOGLE_CLIENT_ID,
-    });
-    const payload = ticket.getPayload();
+    let payload = {};
+
+    if (accessToken) {
+        // Trường hợp Frontend dùng useGoogleLogin (trả về access_token bắt đầu bằng ya29...)
+        try {
+            const { data } = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
+                headers: { Authorization: `Bearer ${accessToken}` }
+            });
+            payload = {
+                email: data.email,
+                name: data.name,
+                picture: data.picture,
+                sub: data.sub
+            };
+        } catch (error) {
+            throw new ApiError(400, 'Google accessToken không hợp lệ hoặc đã hết hạn');
+        }
+    } else {
+        // Trường hợp Frontend dùng component <GoogleLogin /> (trả về idToken/credential bắt đầu bằng eyJ...)
+        try {
+            const ticket = await googleClient.verifyIdToken({
+                idToken,
+                audience: env.GOOGLE_CLIENT_ID,
+            });
+            payload = ticket.getPayload();
+        } catch (error) {
+            throw new ApiError(400, 'Google idToken không hợp lệ hoặc cấu hình sai Client ID');
+        }
+    }
+
+    if (!payload.email) {
+        throw new ApiError(400, 'Không thể lấy thông tin email từ tài khoản Google này');
+    }
+
     const email = payload.email.toLowerCase();
 
     let user = await User.findOne({ email });

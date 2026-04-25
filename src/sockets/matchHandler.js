@@ -1,7 +1,7 @@
 import redis from '../config/redis.js';
-import { 
-    findOrQueuePartnerService, 
-    handleQueueTimeoutService, 
+import {
+    findOrQueuePartnerService,
+    handleQueueTimeoutService,
     leaveMatchAndQueueService,
     requestDirectMatchService,
     acceptDirectMatchService
@@ -73,6 +73,7 @@ export const handleMatchProvider = (io, socket) => {
                         socket.queueTimeout = null;
                     }
                 }, QUEUE_TIMEOUT_SECONDS * 1000);
+                console.log(`[Queue] ${userId} đã tham gia hàng chờ`);
             }
 
         } catch (err) {
@@ -100,7 +101,7 @@ export const handleMatchProvider = (io, socket) => {
                     });
                 }
             }
-
+            console.log(`[Leave] ${userId} đã rời hàng chờ`);
         } catch (error) {
             console.error('Cleanup Error:', error);
         }
@@ -110,10 +111,10 @@ export const handleMatchProvider = (io, socket) => {
         const userId = getUserId();
         try {
             const partnerSocketId = await requestDirectMatchService(userId, targetUserId);
-            
-            io.to(partnerSocketId).emit('direct_match_offer', { 
-                 callerId: userId,
-                 message: 'Bạn có một cuộc gọi đến.'
+
+            io.to(partnerSocketId).emit('direct_match_offer', {
+                callerId: userId,
+                message: 'Bạn có một cuộc gọi đến.'
             });
         } catch (err) {
             socket.emit('direct_match_error', { message: err.message });
@@ -124,11 +125,11 @@ export const handleMatchProvider = (io, socket) => {
         const userId = getUserId();
         try {
             const callerSocketId = await redis.get(`socket:${callerId}`);
-            
+
             if (!accept) {
                 if (callerSocketId) {
                     io.to(callerSocketId).emit('direct_match_rejected', {
-                         message: 'Người dùng đã từ chối cuộc gọi.'
+                        message: 'Người dùng đã từ chối cuộc gọi.'
                     });
                 }
                 return;
@@ -136,30 +137,30 @@ export const handleMatchProvider = (io, socket) => {
 
             // Accept Match
             const { sessionId } = await acceptDirectMatchService(callerId, userId);
-            
+
             socket.join(sessionId);
             if (callerSocketId) {
-                 const callerSocket = io.sockets.sockets.get(callerSocketId);
-                 if (callerSocket) {
-                      callerSocket.join(sessionId);
-                      clearQueueTimeout(callerSocket);
-                 }
+                const callerSocket = io.sockets.sockets.get(callerSocketId);
+                if (callerSocket) {
+                    callerSocket.join(sessionId);
+                    clearQueueTimeout(callerSocket);
+                }
             }
             clearQueueTimeout(socket);
 
             // Notify both to transition to call room
             io.to(socket.id).emit('match_found', { sessionId, partnerId: callerId });
             if (callerSocketId) {
-                 io.to(callerSocketId).emit('match_found', { sessionId, partnerId: userId });
+                io.to(callerSocketId).emit('match_found', { sessionId, partnerId: userId });
             }
 
         } catch (err) {
-             console.error('Direct Match Accept Error:', err);
-             socket.emit('direct_match_error', { message: err.message });
-             const callerSocketId = await redis.get(`socket:${callerId}`);
-             if (callerSocketId) {
-                  io.to(callerSocketId).emit('direct_match_error', { message: 'Lỗi khi đồng ý kết nối.' });
-             }
+            console.error('Direct Match Accept Error:', err);
+            socket.emit('direct_match_error', { message: err.message });
+            const callerSocketId = await redis.get(`socket:${callerId}`);
+            if (callerSocketId) {
+                io.to(callerSocketId).emit('direct_match_error', { message: 'Lỗi khi đồng ý kết nối.' });
+            }
         }
     });
 

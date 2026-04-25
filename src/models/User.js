@@ -25,7 +25,7 @@ const userSchema = new mongoose.Schema(
       fullName: { type: String, required: true, trim: true },
       avatar: { type: String, default: 'default_avatar.png' },
       bio: { type: String, maxLength: 500, default: '' },
-      country: { type: String, required: true }, // VD: 'vi', 'en'
+      country: { type: String }, // VD: 'vi', 'en'
     },
 
     status: {

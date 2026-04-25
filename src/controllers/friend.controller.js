@@ -61,10 +61,23 @@ const removeFriend = async (req, res) => {
     }
 }
 
+const checkFriendStatus = async (req, res) => {
+    try {
+        const { targetUserId } = req.params;
+        const userId = req.user.id;
+        
+        const result = await friendService.checkFriendshipStatus(userId, targetUserId);
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(error.statusCode || 500).json({ error: error.message || 'Lỗi khi kiểm tra trạng thái bạn bè' });
+    }
+}
+
 export {
     getListFriends,
     sendFriendRequest,
     responseFriendRequest,
     getFriendRequests,
-    removeFriend
+    removeFriend,
+    checkFriendStatus
 }

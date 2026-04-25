@@ -75,11 +75,30 @@ const getDashboard = async (req, res) => {
   }
 };
 
+const createAdmin = async (req, res) => {
+  try {
+    const admin = await adminService.createAdmin(req.body);
+    logger.log(`Tài khoản Admin mới được tạo: ${admin.email}`);
+    res.status(201).json({
+      message: 'Tạo tài khoản Admin thành công',
+      admin: {
+        id: admin._id,
+        email: admin.email,
+        fullName: admin.profile.fullName
+      }
+    });
+  } catch (error) {
+    logger.error(error.message);
+    res.status(error.statusCode || 500).json({ error: error.message || 'Lỗi khi tạo tài khoản Admin' });
+  }
+};
+
 export {
   getAllUsers,
   banUser,
   deleteUser,
   getReports,
   resolveReport,
-  getDashboard
+  getDashboard,
+  createAdmin
 };

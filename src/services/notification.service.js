@@ -88,10 +88,22 @@ const markAsRead = async (userId, notificationId) => {
     );
 };
 
+/**
+ * Cập nhật nội dung của một thông báo cụ thể (VD: Lời mời kết bạn đã được xử lý)
+ */
+const updateNotificationContent = async (recipientId, metadataQuery, updateData) => {
+    return await Notification.findOneAndUpdate(
+        { recipientId, ...metadataQuery },
+        { ...updateData, isRead: true },
+        { new: true }
+    );
+};
+
 export default {
     createAndPush,
     notifyAllAdmins,
     getNotifications,
     countUnread,
-    markAsRead
+    markAsRead,
+    updateNotificationContent
 };

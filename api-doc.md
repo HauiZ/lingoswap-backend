@@ -254,6 +254,12 @@ Dành riêng cho quản trị viên, yêu cầu `🔒 Admin Token`.
     }
     ```
 
+### 3.3 Dashboard Thống kê `🔒 Admin Token`
+- **Method:** `GET`
+- **Endpoint:** `/api/admin/dashboard`
+- **Responses:**
+  - `200 OK`: Trả về toàn bộ số liệu thống kê hệ thống bao gồm lượng user, báo cáo, thời lượng cuộc gọi, và biểu đồ dữ liệu 7 ngày qua.
+
 ### 3.3 Xóa tài khoản vĩnh viễn
 - **Method:** `DELETE`
 - **Endpoint:** `/api/admin/users/{id}`
@@ -393,6 +399,14 @@ Mọi việc liên quan đến trạng thái gửi, nhận và quản lý bạn 
   - `200 OK`: `{ "message": "Đã từ chối yêu cầu kết bạn" }` (nếu `"status": "reject"`)
   - `400 Bad Request`: `{ "error": "Trạng thái không hợp lệ" }`
   - `403 Forbidden`: `{ "error": "Không có quyền thực hiện hành động này" }`
+
+### 5.4 Hủy kết bạn `🔒 Yêu cầu Token`
+- **Method:** `DELETE`
+- **Endpoint:** `/api/user/friends/friends/{friendId}`
+- **Path Parameters:** `friendId` = ID của người bạn cần hủy kết bạn.
+- **Responses:**
+  - `200 OK`: `{ "message": "Đã hủy kết bạn" }`
+  - `404 Not Found`: `{ "error": "Không tìm thấy quan hệ bạn bè này" }`
 
 ---
 
@@ -588,5 +602,19 @@ Sử dụng chung các luồng sau cho WebRTC, truyền tải dữ liệu P2P tr
       "type": "friend_request", // Hoặc friend_accepted, report_new, account_banned, etc.
       "content": "Nội dung thông báo",
       "senderId": { "profile": { "fullName": "..." } }
+    }
+    ```
+
+### 8.6 Duy trì Online (Heartbeat)
+- **`[EMIT]` heartbeat**: Gửi mỗi 2 phút 1 lần để duy trì trạng thái online, tránh bị đánh dấu offline trên Redis sau 5 phút.
+  - *Payload*: `Không cần truyền data`
+
+### 8.7 Trạng thái Bạn bè (Presence Broadcast)
+- **`[ON]` friend_status_change**: Server phát sóng sự kiện này mỗi khi một người bạn trong danh sách của bạn thay đổi trạng thái (online/offline).
+  - *Payload*:
+    ```json
+    {
+      "userId": "id_người_bạn",
+      "status": "online" // hoặc "offline"
     }
     ```

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getListFriends, sendFriendRequest, responseFriendRequest, getFriendRequests } from "../controllers/friend.controller.js";
+import { getListFriends, sendFriendRequest, responseFriendRequest, getFriendRequests, removeFriend } from "../controllers/friend.controller.js";
 import { authenticateToken } from "../middlewares/auth.js";
 
 const router = Router();
@@ -83,5 +83,25 @@ router.post('/friends/:recipientId/request', authenticateToken, sendFriendReques
  *         description: Yêu cầu kết bạn đã được phản hồi
  */
 router.patch('/friends/:requestId/response', authenticateToken, responseFriendRequest);
+
+/**
+ * @swagger
+ * /api/user/friends/friends/:friendId:
+ *   delete:
+ *     summary: Hủy kết bạn
+ *     tags: [Friends]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: friendId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Đã hủy kết bạn
+ */
+router.delete('/friends/:friendId', authenticateToken, removeFriend);
 
 export default router;

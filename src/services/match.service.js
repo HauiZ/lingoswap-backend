@@ -54,7 +54,7 @@ export const handleQueueTimeoutService = async (userId, language) => {
     const stillInQueue = await redis.lpos(queueKey, userId);
     if (stillInQueue !== null) {
         await redis.lrem(queueKey, 0, userId);
-        await User.findByIdAndUpdate(userId, { status: 'online' });
+        await User.findByIdAndUpdate(userId, { status: 'idle' });
         return true; 
     }
     return false;
@@ -69,7 +69,19 @@ export const leaveMatchAndQueueService = async (userId, currentLanguage) => {
     if (activeSession) {
         activeSession.status = 'completed';
         activeSession.endedAt = new Date();
-        await activeSession.save(); // Kích hoạt pre('save') middleware
+        await activeSession.save(); // Kích hoạt pre('save') middleware tính durationSeconds
+
+        // Cập nhật thống kê (sessions & hours) cho CẢ 2 người dùng (O(1))
+        const durationHours = activeSession.durationSeconds / 3600;
+        await User.updateMany(
+            { _id: { $in: activeSession.participants } },
+            { 
+                $inc: { 
+                    'stats.totalSessions': 1,
+                    'stats.totalHours': durationHours
+                }
+            }
+        ).catch(err => console.error("Lỗi cập nhật stats User:", err));
     }
 
     let partnerId = null;
@@ -78,10 +90,10 @@ export const leaveMatchAndQueueService = async (userId, currentLanguage) => {
             (id) => id.toString() !== userId
         );
         if (partnerId) {
-            await User.findByIdAndUpdate(partnerId, { status: 'online' });
+            await User.findByIdAndUpdate(partnerId, { status: 'idle' });
         }
     }
-    await User.findByIdAndUpdate(userId, { status: 'online' });
+    await User.findByIdAndUpdate(userId, { status: 'idle' });
 
     return { activeSession, partnerId };
 };

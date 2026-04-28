@@ -156,7 +156,34 @@ Quản lý thông tin hồ sơ người dùng.
     }
     ```
 
-### 2.2 Lấy thông tin Public Profile 
+### 2.2 Tổng quan Dashboard User `🔒 Yêu cầu Token`
+- **Method:** `GET`
+- **Endpoint:** `/api/users/dashboard`
+- **Responses:**
+  - `200 OK`: 
+    ```json
+    {
+      "greeting": "Chào buổi sáng, Ngân",
+      "stats": {
+        "streak": 12,
+        "totalHours": 47.5,
+        "totalSessions": 138
+      },
+      "learningCalendar": [1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13],
+      "suggestedPartners": [
+        {
+          "_id": "user_id_1",
+          "fullName": "Sara Kim",
+          "avatar": "url",
+          "nativeLanguage": "ko",
+          "learningLanguage": "en",
+          "isOnline": true
+        }
+      ]
+    }
+    ```
+
+### 2.3 Lấy thông tin User khác (Public Profile)
 - **Method:** `GET`
 - **Endpoint:** `/api/users/{id}`
 - **Path Parameters:** `id` = ID của người dùng.
@@ -254,12 +281,6 @@ Dành riêng cho quản trị viên, yêu cầu `🔒 Admin Token`.
     }
     ```
 
-### 3.3 Dashboard Thống kê `🔒 Admin Token`
-- **Method:** `GET`
-- **Endpoint:** `/api/admin/dashboard`
-- **Responses:**
-  - `200 OK`: Trả về toàn bộ số liệu thống kê hệ thống bao gồm lượng user, báo cáo, thời lượng cuộc gọi, và biểu đồ dữ liệu 7 ngày qua.
-
 ### 3.3 Xóa tài khoản vĩnh viễn
 - **Method:** `DELETE`
 - **Endpoint:** `/api/admin/users/{id}`
@@ -271,15 +292,43 @@ Dành riêng cho quản trị viên, yêu cầu `🔒 Admin Token`.
 - **Method:** `GET`
 - **Endpoint:** `/api/admin/dashboard`
 - **Responses:**
-  - `200 OK`:
+  - `200 OK`: 
     ```json
     {
-      "users": { "total": 100, "active": 90, "banned": 10, "online": 5, "newToday": 2, "newThisWeek": 15, "newThisMonth": 40 },
-      "matchSessions": { "total": 200, "today": 10, "thisWeek": 50, "avgDurationSeconds": 120, "totalDurationSeconds": 24000 },
-      "messages": { "total": 5000, "today": 100, "thisWeek": 700 },
-      "reports": { "total": 20, "pending": 5, "resolved": 15, "today": 1 },
-      "friendships": { "total": 30 },
-      "charts": { "newUsersLast7Days": [...], "sessionsLast7Days": [...] }
+      "users": {
+        "total": 100,
+        "active": 90,
+        "banned": 10,
+        "online": 50, // Số lượng user đang online (Realtime từ RAM)
+        "newToday": 5,
+        "newThisWeek": 20,
+        "newThisMonth": 50
+      },
+      "matchSessions": {
+        "total": 200,
+        "today": 20,
+        "thisWeek": 100,
+        "avgDurationSeconds": 300,
+        "totalDurationSeconds": 60000
+      },
+      "messages": {
+        "total": 5000,
+        "today": 100,
+        "thisWeek": 1000
+      },
+      "reports": {
+        "total": 50,
+        "pending": 5,
+        "resolved": 45,
+        "today": 2
+      },
+      "friendships": {
+        "total": 150
+      },
+      "charts": {
+        "newUsersLast7Days": [...],
+        "sessionsLast7Days": [...]
+      }
     }
     ```
 
@@ -418,6 +467,17 @@ Mọi việc liên quan đến trạng thái gửi, nhận và quản lý bạn 
     {
       "status": "none", // Các trạng thái: "none", "friends", "request_sent", "request_received"
       "friendshipId": "ID của yêu cầu nếu có, null nếu chưa từng kết bạn"
+    }
+    ```
+
+### 5.6 Lấy danh sách ID bạn bè đang online `🔒 Yêu cầu Token`
+- **Method:** `GET`
+- **Endpoint:** `/api/user/friends/online-friends`
+- **Responses:**
+  - `200 OK`: 
+    ```json
+    {
+      "onlineFriendIds": ["id_nguoi_ban_1", "id_nguoi_ban_2"]
     }
     ```
 
@@ -618,12 +678,25 @@ Sử dụng chung các luồng sau cho WebRTC, truyền tải dữ liệu P2P tr
     }
     ```
 
-### 8.6 Duy trì Online (Heartbeat)
-- **`[EMIT]` heartbeat**: Gửi mỗi 2 phút 1 lần để duy trì trạng thái online, tránh bị đánh dấu offline trên Redis sau 5 phút.
+### 8.6 Duy trì Online - Kiến trúc Facebook-like (Heartbeat)
+
+> **Kiến trúc:** Client → heartbeat → Server RAM (Map) → Redis chỉ ghi khi state CHANGE → MongoDB batch sync qua Worker.
+
+- **`[EMIT]` heartbeat**: Client gửi **mỗi 30 giây 1 lần** để duy trì trạng thái online.
   - *Payload*: `Không cần truyền data`
+  - *Server xử lý*: Chỉ update `lastHeartbeat` trong **RAM** (in-memory Map). **KHÔNG ghi Redis, KHÔNG ghi MongoDB.**
+  - *Timeout*: Nếu Server không nhận heartbeat trong **90 giây**, user sẽ tự động bị đánh dấu **offline**.
+
+**Quy tắc ghi dữ liệu:**
+| Hành động | RAM | Redis | MongoDB | Broadcast |
+|---|---|---|---|---|
+| User connect | ✅ | ✅ (1 lần) | ❌ | ✅ `friend_status_change` |
+| Heartbeat (30s) | ✅ | ❌ | ❌ | ❌ |
+| User disconnect / Timeout | ✅ Xóa | ✅ Xóa | ❌ (Worker batch 60s) | ✅ `friend_status_change` |
 
 ### 8.7 Trạng thái Bạn bè (Presence Broadcast)
-- **`[ON]` friend_status_change**: Server phát sóng sự kiện này mỗi khi một người bạn trong danh sách của bạn thay đổi trạng thái (online/offline).
+- **`[ON]` friend_status_change**: Server **chỉ phát sóng khi trạng thái THAY ĐỔI** (online → offline hoặc offline → online). Không broadcast liên tục.
+  - *Khi nào nhận*: Khi một người bạn trong danh sách bạn bè kết nối (online) hoặc ngắt kết nối/timeout (offline).
   - *Payload*:
     ```json
     {
@@ -631,3 +704,27 @@ Sử dụng chung các luồng sau cho WebRTC, truyền tải dữ liệu P2P tr
       "status": "online" // hoặc "offline"
     }
     ```
+  - *Lưu ý*: Server chỉ gửi cho bạn bè **đang online** (check RAM), không gửi cho user đang offline.
+
+---
+
+## 9. Báo cáo & Phản hồi (Reports) APIs (`/api/user/reports`)
+
+### 9.1 Gửi báo cáo vi phạm `🔒 Yêu cầu Token`
+- **Method:** `POST`
+- **Endpoint:** `/api/user/reports`
+- **Body Parameters:**
+  ```json
+  {
+    "reportedUserId": "ID của người bị báo cáo",
+    "reason": "Lý do báo cáo (ví dụ: Spam, Quấy rối...)",
+    "matchSessionId": "ID phiên chat (nếu có)",
+    "conversationId": "ID cuộc trò chuyện (nếu có)",
+    "evidenceMessageIds": ["ID_tin_nhắn_1", "ID_tin_nhắn_2"]
+  }
+  ```
+- **Responses:**
+  - `201 Created`: `{ "message": "Báo cáo đã được ghi lại thành công", "report": { ... } }`
+  - `400 Bad Request`: `{ "error": "Thiếu thông tin bắt buộc" }`
+
+---

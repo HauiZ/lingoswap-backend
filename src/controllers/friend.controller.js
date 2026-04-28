@@ -1,4 +1,5 @@
 import friendService from '../services/friend.service.js';
+import presenceService from '../services/presence.service.js';
 
 const getListFriends = async (req, res) => {
     try {
@@ -73,11 +74,22 @@ const checkFriendStatus = async (req, res) => {
     }
 }
 
+const getOnlineFriends = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const onlineFriendIds = await presenceService.getOnlineFriendIds(userId);
+        res.status(200).json({ onlineFriendIds });
+    } catch (error) {
+        res.status(500).json({ error: error.message || 'Lỗi khi lấy danh sách bạn bè online' });
+    }
+}
+
 export {
     getListFriends,
     sendFriendRequest,
     responseFriendRequest,
     getFriendRequests,
     removeFriend,
-    checkFriendStatus
+    checkFriendStatus,
+    getOnlineFriends
 }

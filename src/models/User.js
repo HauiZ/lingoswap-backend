@@ -30,8 +30,8 @@ const userSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ['offline', 'online', 'waiting', 'in-call'],
-      default: 'offline'
+      enum: ['idle', 'waiting', 'in-call'], // Trạng thái nghiệp vụ (Match System). Trạng thái online/offline thực tế do RAM quản lý.
+      default: 'idle'
     },
 
     // Cấu hình cá nhân
@@ -43,6 +43,7 @@ const userSchema = new mongoose.Schema(
     // Thống kê & Gamification
     stats: {
       streak: { type: Number, default: 0 }, // Chuỗi ngày online
+      lastStreakUpdate: { type: Date }, // Lưu lại thời điểm cập nhật streak lần cuối
       totalHours: { type: Number, default: 0 }, // Tổng giờ chat/video
       totalSessions: { type: Number, default: 0 } // Số phiên matching
     },

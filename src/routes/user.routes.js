@@ -1,6 +1,6 @@
 import express from 'express';
 const router = express.Router();
-import { getMyProfile, getUserById, updateMyProfile, uploadAvatar } from '../controllers/user.controller.js';
+import { getMyProfile, getUserById, updateMyProfile, uploadAvatar, getDashboard } from '../controllers/user.controller.js';
 import { authenticateToken } from '../middlewares/auth.js';
 import { uploadImage } from '../middlewares/upload.js';
 
@@ -17,6 +17,20 @@ import { uploadImage } from '../middlewares/upload.js';
  *         description: Thông tin user
  */
 router.get('/me', authenticateToken, getMyProfile);
+
+/**
+ * @swagger
+ * /api/users/dashboard:
+ *   get:
+ *     summary: Lấy dữ liệu tổng quan cho trang chủ User
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Thông tin tổng quan (thống kê, lịch sử, gợi ý đối tác)
+ */
+router.get('/dashboard', authenticateToken, getDashboard);
 
 /**
  * @swagger

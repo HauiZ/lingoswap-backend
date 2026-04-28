@@ -49,9 +49,21 @@ const uploadAvatar = async (req, res) => {
   }
 };
 
+// Lấy dashboard tổng quan (stats, lịch sử, gợi ý)
+const getDashboard = async (req, res) => {
+  try {
+    const dashboardData = await userService.getUserDashboard(req.user.id);
+    res.json(dashboardData);
+  } catch (error) {
+    logger.error(error.message);
+    res.status(error.statusCode || 500).json({ error: error.message || 'Lỗi khi lấy dashboard' });
+  }
+}
+
 export {
   getUserById,
   getMyProfile,
   updateMyProfile,
   uploadAvatar,
+  getDashboard
 };

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getListFriends, sendFriendRequest, responseFriendRequest, getFriendRequests, removeFriend, checkFriendStatus } from "../controllers/friend.controller.js";
+import { getListFriends, sendFriendRequest, responseFriendRequest, getFriendRequests, removeFriend, checkFriendStatus, getOnlineFriends } from "../controllers/friend.controller.js";
 import { authenticateToken } from "../middlewares/auth.js";
 
 const router = Router();
@@ -123,5 +123,19 @@ router.delete('/friends/:friendId', authenticateToken, removeFriend);
  *         description: Trạng thái bạn bè (none, friends, request_sent, request_received)
  */
 router.get('/friends/:targetUserId/status', authenticateToken, checkFriendStatus);
+
+/**
+ * @swagger
+ * /api/user/friends/online-friends:
+ *   get:
+ *     summary: Lấy danh sách ID các bạn bè đang online
+ *     tags: [Friends]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Trả về danh sách ID của bạn bè đang online
+ */
+router.get('/online-friends', authenticateToken, getOnlineFriends);
 
 export default router;

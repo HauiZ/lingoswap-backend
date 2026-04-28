@@ -20,7 +20,7 @@ export const startLastOnlineWorker = () => {
                     update: {
                         $set: {
                             lastOnlineAt: now,
-                            status: 'offline' // Cập nhật luôn trạng thái bền vững trong DB
+                            status: 'idle' // Reset trạng thái nghiệp vụ về rảnh rỗi khi user mất kết nối
                         }
                     }
                 }

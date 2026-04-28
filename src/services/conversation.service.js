@@ -1,6 +1,6 @@
 import Message from '../models/Message.js';
 import Conversation from '../models/Conversation.js';
-import redis from '../config/redis.js';
+import presenceService from './presence.service.js';
 import { formatSpecificDate, getFriendlyTime } from '../utils/timeHelper.js';
 import ApiError from '../utils/ApiError.js';
 
@@ -20,8 +20,8 @@ const getAllConversation = async (userId) => {
         const partner = convObj.participants.find(p => p._id.toString() !== userId.toString());
 
         if (partner) {
-            const isOnline = await redis.get(`socket:${partner._id}`);
-            partner.status = isOnline ? 'online' : 'offline';
+            // Check online qua RAM (PresenceManager) thay vì Redis
+            partner.status = presenceService.isOnline(partner._id.toString()) ? 'online' : 'offline';
 
             partner.lastSeen = {
                 full: formatSpecificDate(partner.lastOnlineAt),

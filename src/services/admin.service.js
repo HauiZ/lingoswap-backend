@@ -9,6 +9,7 @@ import sendEmail from '../utils/sendEmail.js';
 import renderEmailTemplate from '../utils/emailTemplate.js';
 import bcrypt from 'bcryptjs';
 import { validateEmail, validatePassword } from '../utils/validators.js';
+import presenceService from './presence.service.js';
 
 const getAllUsers = async () => {
     return await User.find().select('-password -__v').sort({ createdAt: -1 });
@@ -144,12 +145,8 @@ const getDashboardStats = async () => {
         User.countDocuments({ createdAt: { $gte: thisMonth } })
     ]);
 
-    // Online users (quét Redis presence keys)
-    let onlineUsers = 0;
-    try {
-        const keys = await redis.keys('presence:*');
-        onlineUsers = keys.length;
-    } catch (e) { /* Redis error */ }
+    // Online users (Lấy từ PresenceManager - RAM, siêu nhanh)
+    let onlineUsers = presenceService.getOnlineCount();
 
     // --- 2. Thống kê Phiên gọi (Match Sessions) ---
     const [totalSessions, sessionsToday, sessionsWeek, avgDurationResult] = await Promise.all([

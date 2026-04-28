@@ -4,6 +4,7 @@ import { formatSpecificDate, getFriendlyTime } from '../utils/timeHelper.js';
 import ApiError from '../utils/ApiError.js';
 import User from "../models/User.js";
 import notificationService from '../services/notification.service.js';
+import presenceService from '../services/presence.service.js';
 
 const getListFriends = async (userId) => {
     const friendships = await Friendship.find({
@@ -13,14 +14,28 @@ const getListFriends = async (userId) => {
         ]
     }).populate('requesterId', '_id profile email status lastOnlineAt').populate('recipientId', '_id profile email status lastOnlineAt');
 
+    // Lấy các cuộc hội thoại trực tiếp của người dùng
+    const conversations = await Conversation.find({
+        participants: userId,
+        matchSessionId: null
+    }).lean();
+
     const listFriends = friendships.map(friendship => {
         const partner = friendship.requesterId._id.toString() === userId.toString() ? friendship.recipientId : friendship.requesterId;
+
+        // Tìm cuộc hội thoại chung với người bạn này
+        const conversation = conversations.find(conv =>
+            conv.participants.some(p => p.toString() === partner._id.toString())
+        );
+
         return {
             _id: partner._id,
+            conversationId: conversation ? conversation._id : null,
             fullName: partner.profile.fullName,
             avatar: partner.profile.avatar,
             email: partner.email,
-            status: partner.status,
+            // Check online qua RAM (PresenceManager) thay vì DB
+            status: presenceService.isOnline(partner._id.toString()) ? 'online' : 'offline',
             lastOnlineAt: {
                 full: formatSpecificDate(partner.lastOnlineAt),
                 friendly: getFriendlyTime(partner.lastOnlineAt)
@@ -129,8 +144,6 @@ const responseFriendRequest = async (userId, requestId, status, io) => {
                         metadata: { friendshipId: friendship._id }
                     });
 
-                    // Cập nhật lại thông báo yêu cầu kết bạn của bản thân thành đã chấp nhận
-                    // Cập nhật lại thông báo yêu cầu kết bạn của bản thân thành đã chấp nhận
                     await notificationService.updateNotificationContent(
                         userId,
                         { type: 'friend_request', 'metadata.friendshipId': friendship._id },
@@ -163,8 +176,6 @@ const responseFriendRequest = async (userId, requestId, status, io) => {
                         metadata: { friendshipId: friendship._id }
                     });
 
-                    // Cập nhật lại thông báo yêu cầu kết bạn của bản thân thành đã từ chối
-                    // Cập nhật lại thông báo yêu cầu kết bạn của bản thân thành đã từ chối
                     await notificationService.updateNotificationContent(
                         userId,
                         { type: 'friend_request', 'metadata.friendshipId': friendship._id },

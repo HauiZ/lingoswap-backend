@@ -8,8 +8,11 @@ import ApiError from '../utils/ApiError.js';
 import sendEmail from '../utils/sendEmail.js';
 import renderEmailTemplate from '../utils/emailTemplate.js';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 import { validateEmail, validatePassword } from '../utils/validators.js';
 import presenceService from './presence.service.js';
+import env from '../config/env.js';
+import Appeal from '../models/Appeal.js';
 
 const getAllUsers = async () => {
     return await User.find().select('-password -__v').sort({ createdAt: -1 });
@@ -25,11 +28,15 @@ const banUser = async (id) => {
     await user.save();
 
     try {
+        const appealToken = jwt.sign({ id: user._id, type: 'appeal' }, env.JWT_SECRET, { expiresIn: '7d' });
+        const appealLink = `${env.FRONTEND_URL}/appeal?token=${appealToken}`;
+
         const html = renderEmailTemplate('banned', {
             fullName: user.profile.fullName,
             banDuration: 'Khóa vĩnh viễn',
             reason: 'Vi phạm Tiêu chuẩn Cộng đồng LingoSwap.',
-            bannedUntil: 'Không có ngày mở khóa'
+            bannedUntil: 'Không có ngày mở khóa',
+            appealLink: appealLink
         });
         await sendEmail({
             email: user.email,
@@ -104,11 +111,15 @@ const resolveReport = async (reportId, adminId, payload) => {
                     : reportedUser.bannedUntil.toLocaleString('vi-VN');
                 const reasonText = adminNotes || 'Vi phạm quy tắc cộng đồng.';
 
+                const appealToken = jwt.sign({ id: reportedUser._id, type: 'appeal' }, env.JWT_SECRET, { expiresIn: '7d' });
+                const appealLink = `${env.FRONTEND_URL}/appeal?token=${appealToken}`;
+
                 const html = renderEmailTemplate('banned', {
                     fullName: reportedUser.profile.fullName,
                     banDuration: `Tạm khóa ${durationText}`,
                     reason: reasonText,
-                    bannedUntil: bannedUntilText
+                    bannedUntil: bannedUntilText,
+                    appealLink: appealLink
                 });
 
                 await sendEmail({
@@ -279,6 +290,92 @@ const createAdmin = async ({ email, password, confirmPassword, fullName }) => {
     return admin;
 };
 
+const getAllAppeals = async (statusFilter, limit = 20, page = 1) => {
+    let query = {};
+    if (statusFilter) query.status = statusFilter;
+
+    const appeals = await Appeal.find(query)
+        .populate('userId', 'profile.fullName email username statusAccount bannedUntil')
+        .populate('resolvedByAdminId', 'profile.fullName email username')
+        .sort({ createdAt: -1 })
+        .limit(limit * 1)
+        .skip((page - 1) * limit)
+        .lean();
+
+    const appealsWithReason = await Promise.all(appeals.map(async (appeal) => {
+        const latestReport = await Report.findOne({ 
+            reportedUserId: appeal.userId._id, 
+            status: 'resolved' 
+        }).sort({ updatedAt: -1 });
+        
+        return {
+            ...appeal,
+            banReason: latestReport ? (latestReport.adminNotes || 'Vi phạm quy tắc cộng đồng.') : 'Khóa thủ công bởi Admin.'
+        };
+    }));
+
+    return appealsWithReason;
+};
+
+const resolveAppeal = async (appealId, adminId, payload) => {
+    const { status, adminNotes } = payload;
+    
+    const appeal = await Appeal.findById(appealId).populate('userId');
+    if (!appeal) throw new ApiError(404, 'Đơn kháng cáo không tồn tại');
+    if (appeal.status !== 'pending') throw new ApiError(400, 'Đơn kháng cáo này đã được xử lý');
+
+    appeal.status = status;
+    if (adminNotes) appeal.adminNotes = adminNotes;
+    appeal.resolvedByAdminId = adminId;
+
+    if (status === 'approved') {
+        const user = await User.findById(appeal.userId._id);
+        if (user) {
+            user.statusAccount = 'active';
+            user.bannedUntil = null;
+            await user.save();
+
+            // Gửi email thông báo mở khoá
+            try {
+                const html = renderEmailTemplate('appeal_approved', {
+                    fullName: user.profile.fullName,
+                    adminNotes: adminNotes || 'Cảm ơn bạn đã giải trình. Tài khoản của bạn đã được khôi phục.',
+                    frontendUrl: env.FRONTEND_URL
+                });
+
+                await sendEmail({
+                    email: user.email,
+                    subject: 'Thông báo: Kháng cáo thành công - Tài khoản đã được mở khóa',
+                    message: `Chào ${user.profile.fullName},\n\nSau khi xem xét đơn kháng cáo, chúng tôi đã mở khóa tài khoản của bạn.`,
+                    html
+                });
+            } catch (e) {
+                console.error("Lỗi khi gửi email appeal_approved:", e.message);
+            }
+        }
+    } else if (status === 'rejected') {
+        // Gửi email thông báo từ chối
+        try {
+            const html = renderEmailTemplate('appeal_rejected', {
+                fullName: appeal.userId.profile.fullName,
+                adminNotes: adminNotes || 'Quyết định khóa tài khoản là chính xác dựa trên vi phạm của bạn.'
+            });
+
+            await sendEmail({
+                email: appeal.userId.email,
+                subject: 'Thông báo: Kết quả đơn kháng cáo',
+                message: `Chào ${appeal.userId.profile.fullName},\n\nĐơn kháng cáo của bạn đã bị từ chối.`,
+                html
+            });
+        } catch (e) {
+            console.error("Lỗi khi gửi email từ chối kháng cáo:", e.message);
+        }
+    }
+
+    await appeal.save();
+    return appeal;
+};
+
 export default {
     getAllUsers,
     banUser,
@@ -286,5 +383,7 @@ export default {
     getAllReports,
     resolveReport,
     getDashboardStats,
-    createAdmin
+    createAdmin,
+    getAllAppeals,
+    resolveAppeal
 };

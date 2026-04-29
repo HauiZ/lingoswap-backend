@@ -34,4 +34,22 @@ const authorizeRoles = (...roles) => {
   };
 };
 
-export { authenticateToken, authorizeRoles };
+const verifyAppealToken = (req, res, next) => {
+  const { appealToken } = req.body;
+  if (!appealToken) {
+    return res.status(400).json({ error: 'Vui lòng cung cấp token kháng cáo' });
+  }
+
+  jwt.verify(appealToken, env.JWT_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(400).json({ error: 'Token kháng cáo không hợp lệ hoặc đã hết hạn' });
+    }
+    if (decoded.type !== 'appeal' || !decoded.id) {
+      return res.status(400).json({ error: 'Token không đúng định dạng' });
+    }
+    req.appealUser = { id: decoded.id };
+    next();
+  });
+};
+
+export { authenticateToken, authorizeRoles, verifyAppealToken };

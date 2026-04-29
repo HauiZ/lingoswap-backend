@@ -93,6 +93,31 @@ const createAdmin = async (req, res) => {
   }
 };
 
+const getAppeals = async (req, res) => {
+  try {
+    const { status, limit, page } = req.query;
+    const appeals = await adminService.getAllAppeals(status, limit, page);
+    logger.log('Admin lấy danh sách đơn kháng cáo');
+    res.json(appeals);
+  } catch (error) {
+    logger.error(error.message);
+    res.status(error.statusCode || 500).json({ error: error.message || 'Lỗi lấy danh sách kháng cáo' });
+  }
+};
+
+const resolveAppeal = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const adminId = req.user.id;
+    const appeal = await adminService.resolveAppeal(id, adminId, req.body);
+    logger.log(`Admin ${adminId} đã xử lý kháng cáo ID: ${id}`);
+    res.json({ message: 'Đã cập nhật trạng thái đơn kháng cáo', appeal });
+  } catch (error) {
+    logger.error(error.message);
+    res.status(error.statusCode || 500).json({ error: error.message || 'Lỗi khi xử lý đơn kháng cáo' });
+  }
+};
+
 export {
   getAllUsers,
   banUser,
@@ -100,5 +125,7 @@ export {
   getReports,
   resolveReport,
   getDashboard,
-  createAdmin
+  createAdmin,
+  getAppeals,
+  resolveAppeal
 };

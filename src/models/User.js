@@ -45,7 +45,8 @@ const userSchema = new mongoose.Schema(
       streak: { type: Number, default: 0 }, // Chuỗi ngày online
       lastStreakUpdate: { type: Date }, // Lưu lại thời điểm cập nhật streak lần cuối
       totalHours: { type: Number, default: 0 }, // Tổng giờ chat/video
-      totalSessions: { type: Number, default: 0 } // Số phiên matching
+      totalSessions: { type: Number, default: 0 }, // Số phiên matching
+      learningCalendar: { type: Map, of: [Number], default: {} } // Lưu theo tháng VD: { "2026-04": [1, 2, 29] }
     },
 
     role: { type: String, enum: ['user', 'admin'], default: 'user' },

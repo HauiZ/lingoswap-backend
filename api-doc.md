@@ -175,15 +175,43 @@ Quản lý thông tin hồ sơ người dùng.
           "_id": "user_id_1",
           "fullName": "Sara Kim",
           "avatar": "url",
-          "nativeLanguage": "ko",
-          "learningLanguage": "en",
+          "country": "KR",
           "isOnline": true
         }
       ]
     }
     ```
 
-### 2.3 Lấy thông tin User khác (Public Profile)
+### 2.3 Tìm kiếm Người dùng `🔒 Yêu cầu Token`
+- **Method:** `GET`
+- **Endpoint:** `/api/users/search`
+- **Query Parameters:**
+  - `q` (bắt buộc): Từ khóa tìm kiếm (theo tên, email, hoặc quốc gia).
+  - `page` (tuỳ chọn): Trang hiện tại (Mặc định 1).
+  - `limit` (tuỳ chọn): Số kết quả mỗi trang (Mặc định 10).
+- **Responses:**
+  - `200 OK`: 
+    ```json
+    {
+      "results": [
+        {
+          "_id": "60d5ec...",
+          "fullName": "Anna Nguyen",
+          "avatar": "url",
+          "country": "Vietnam",
+          "isOnline": false
+        }
+      ],
+      "pagination": {
+        "total": 45,
+        "page": 1,
+        "limit": 10,
+        "totalPages": 5
+      }
+    }
+    ```
+
+### 2.4 Lấy thông tin User khác (Public Profile)
 - **Method:** `GET`
 - **Endpoint:** `/api/users/{id}`
 - **Path Parameters:** `id` = ID của người dùng.

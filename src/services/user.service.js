@@ -88,40 +88,25 @@ const getUserDashboard = async (userId) => {
         }).catch(err => console.error("Lỗi cập nhật streak:", err));
     }
 
-    // 3. Lịch sử học trong tháng này (Lấy danh sách các ngày có học)
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    // 3. Lịch sử học trong tháng này 
+    const vnNow = new Date(now.getTime() + 7 * 60 * 60 * 1000);
+    const currentMonthStr = `${vnNow.getUTCFullYear()}-${String(vnNow.getUTCMonth() + 1).padStart(2, '0')}`;
+    const learningCalendar = user.stats?.learningCalendar?.get(currentMonthStr) || [];
 
-    const monthlySessions = await MatchSession.find({
-        participants: userId,
-        status: 'completed',
-        createdAt: { $gte: startOfMonth }
-    }).select('createdAt durationSeconds');
-
-    // Gom nhóm theo ngày
-    const learningCalendar = new Set();
-    monthlySessions.forEach(session => {
-        if (session.durationSeconds > 0) {
-            learningCalendar.add(session.createdAt.getDate());
-        }
-    });
-
-    // 4. Đối tác gợi ý (Random tối đa 4 bạn bè ĐANG ONLINE)
+    // 4. Đối tác gợi ý
     const onlineFriendIds = await presenceService.getOnlineFriendIds(userId);
-
-    // Shuffle array (thuật toán Fisher-Yates) và lấy 4 ID
     const shuffledIds = onlineFriendIds.sort(() => 0.5 - Math.random()).slice(0, 4);
 
     const onlineFriends = await User.find({ _id: { $in: shuffledIds } })
-        .select('profile.fullName profile.avatar profile.nativeLanguage profile.learningLanguage')
+        .select('profile.fullName profile.avatar profile.country')
         .lean();
 
     const suggestedPartners = onlineFriends.map(u => ({
         _id: u._id,
         fullName: u.profile?.fullName,
         avatar: u.profile?.avatar,
-        nativeLanguage: u.profile?.nativeLanguage,
-        learningLanguage: u.profile?.learningLanguage,
-        isOnline: true // Chắc chắn là true vì đã lấy từ danh sách online
+        country: u.profile?.country,
+        isOnline: true
     }));
 
     return {
@@ -136,10 +121,52 @@ const getUserDashboard = async (userId) => {
     };
 };
 
+const searchUsers = async (userId, keyword, page = 1, limit = 10) => {
+    const skip = (page - 1) * limit;
+
+    const query = {
+        _id: { $ne: userId },
+        statusAccount: 'active',
+        $or: [
+            { 'profile.fullName': { $regex: keyword, $options: 'i' } },
+            { email: { $regex: keyword, $options: 'i' } },
+            { 'profile.country': { $regex: keyword, $options: 'i' } }
+        ]
+    };
+
+    const users = await User.find(query)
+        .select('profile.fullName profile.avatar profile.country')
+        .skip(skip)
+        .limit(limit)
+        .lean();
+
+    const total = await User.countDocuments(query);
+
+    // Bổ sung trạng thái online
+    const results = users.map(u => ({
+        _id: u._id,
+        fullName: u.profile?.fullName,
+        avatar: u.profile?.avatar,
+        country: u.profile?.country,
+        isOnline: presenceService.isOnline(u._id.toString())
+    }));
+
+    return {
+        results,
+        pagination: {
+            total,
+            page: Number(page),
+            limit: Number(limit),
+            totalPages: Math.ceil(total / limit)
+        }
+    };
+};
+
 export default {
     getUserById,
     getMyProfile,
     updateMyProfile,
     uploadAvatar,
-    getUserDashboard
+    getUserDashboard,
+    searchUsers
 };

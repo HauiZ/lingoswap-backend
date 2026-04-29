@@ -55,7 +55,7 @@ export const handleQueueTimeoutService = async (userId, language) => {
     if (stillInQueue !== null) {
         await redis.lrem(queueKey, 0, userId);
         await User.findByIdAndUpdate(userId, { status: 'idle' });
-        return true; 
+        return true;
     }
     return false;
 };
@@ -64,24 +64,38 @@ export const leaveMatchAndQueueService = async (userId, currentLanguage) => {
     if (currentLanguage) {
         await redis.lrem(`queue:${currentLanguage}`, 0, userId);
     }
-    
+
     let activeSession = await MatchSession.findOne({ participants: userId, status: 'ongoing' });
     if (activeSession) {
         activeSession.status = 'completed';
         activeSession.endedAt = new Date();
-        await activeSession.save(); // Kích hoạt pre('save') middleware tính durationSeconds
+        await activeSession.save();
 
-        // Cập nhật thống kê (sessions & hours) cho CẢ 2 người dùng (O(1))
         const durationHours = activeSession.durationSeconds / 3600;
-        await User.updateMany(
-            { _id: { $in: activeSession.participants } },
-            { 
-                $inc: { 
-                    'stats.totalSessions': 1,
-                    'stats.totalHours': durationHours
+
+        const endDate = new Date(activeSession.endedAt.getTime() + 7 * 60 * 60 * 1000);
+        const monthStr = `${endDate.getUTCFullYear()}-${String(endDate.getUTCMonth() + 1).padStart(2, '0')}`;
+        const day = endDate.getUTCDate();
+
+        if (activeSession.durationSeconds > 0) {
+            await User.updateMany(
+                { _id: { $in: activeSession.participants } },
+                {
+                    $inc: {
+                        'stats.totalSessions': 1,
+                        'stats.totalHours': durationHours
+                    },
+                    $addToSet: {
+                        [`stats.learningCalendar.${monthStr}`]: day
+                    }
                 }
-            }
-        ).catch(err => console.error("Lỗi cập nhật stats User:", err));
+            ).catch(err => console.error("Lỗi cập nhật stats User:", err));
+        } else {
+            await User.updateMany(
+                { _id: { $in: activeSession.participants } },
+                { $inc: { 'stats.totalSessions': 1 } }
+            ).catch(err => console.error("Lỗi cập nhật stats User:", err));
+        }
     }
 
     let partnerId = null;

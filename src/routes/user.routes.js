@@ -1,6 +1,6 @@
 import express from 'express';
 const router = express.Router();
-import { getMyProfile, getUserById, updateMyProfile, uploadAvatar, getDashboard } from '../controllers/user.controller.js';
+import { getMyProfile, getUserById, updateMyProfile, uploadAvatar, getDashboard, searchUsers } from '../controllers/user.controller.js';
 import { authenticateToken } from '../middlewares/auth.js';
 import { uploadImage } from '../middlewares/upload.js';
 
@@ -31,6 +31,37 @@ router.get('/me', authenticateToken, getMyProfile);
  *         description: Thông tin tổng quan (thống kê, lịch sử, gợi ý đối tác)
  */
 router.get('/dashboard', authenticateToken, getDashboard);
+
+/**
+ * @swagger
+ * /api/users/search:
+ *   get:
+ *     summary: Tìm kiếm người dùng theo tên, email hoặc quốc gia
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Từ khóa tìm kiếm
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Trang hiện tại (mặc định 1)
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Số lượng kết quả mỗi trang (mặc định 10)
+ *     responses:
+ *       200:
+ *         description: Danh sách người dùng
+ */
+router.get('/search', authenticateToken, searchUsers);
 
 /**
  * @swagger

@@ -60,10 +60,24 @@ const getDashboard = async (req, res) => {
   }
 }
 
+// Tìm kiếm người dùng
+const searchUsers = async (req, res) => {
+  try {
+    const { q, page, limit } = req.query;
+    const keyword = q ? String(q).trim() : '';
+    const results = await userService.searchUsers(req.user.id, keyword, page, limit);
+    res.json(results);
+  } catch (error) {
+    logger.error(error.message);
+    res.status(error.statusCode || 500).json({ error: error.message || 'Lỗi khi tìm kiếm người dùng' });
+  }
+};
+
 export {
   getUserById,
   getMyProfile,
   updateMyProfile,
   uploadAvatar,
-  getDashboard
+  getDashboard,
+  searchUsers
 };

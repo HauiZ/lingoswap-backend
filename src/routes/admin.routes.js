@@ -1,6 +1,6 @@
 import express from 'express';
 const router = express.Router();
-import { getAllUsers, banUser, deleteUser, getReports, resolveReport, getDashboard } from '../controllers/admin.controller.js';
+import { getAllUsers, banUser, deleteUser, getReports, resolveReport, getDashboard, getAppeals, resolveAppeal } from '../controllers/admin.controller.js';
 import { authenticateToken, authorizeRoles } from '../middlewares/auth.js';
 
 router.use(authenticateToken, authorizeRoles('admin'));
@@ -128,5 +128,60 @@ router.get('/reports', getReports);
  *         description: Trả về thông tin báo cáo đã cập nhật
  */
 router.patch('/reports/:id/status', resolveReport);
+
+/**
+ * @swagger
+ * /api/admin/appeals:
+ *   get:
+ *     summary: Lấy danh sách đơn kháng cáo
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [pending, approved, rejected]
+ *         description: Lọc theo trạng thái
+ *     responses:
+ *       200:
+ *         description: Danh sách đơn kháng cáo
+ */
+router.get('/appeals', getAppeals);
+
+/**
+ * @swagger
+ * /api/admin/appeals/{id}/resolve:
+ *   put:
+ *     summary: Xử lý đơn kháng cáo
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - status
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [approved, rejected]
+ *               adminNotes:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Xử lý kháng cáo thành công
+ */
+router.put('/appeals/:id/resolve', resolveAppeal);
 
 export default router;

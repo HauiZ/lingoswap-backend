@@ -73,11 +73,25 @@ const searchUsers = async (req, res) => {
   }
 };
 
+// Nộp đơn kháng cáo
+const submitAppeal = async (req, res) => {
+  try {
+    const { reason } = req.body;
+    const userId = req.appealUser.id;
+    await userService.submitAppeal(userId, reason);
+    res.status(201).json({ message: 'Đơn kháng cáo đã được gửi thành công. Vui lòng chờ Admin xử lý.' });
+  } catch (error) {
+    logger.error(error.message);
+    res.status(error.statusCode || 500).json({ error: error.message || 'Lỗi khi gửi đơn kháng cáo' });
+  }
+};
+
 export {
   getUserById,
   getMyProfile,
   updateMyProfile,
   uploadAvatar,
   getDashboard,
-  searchUsers
+  searchUsers,
+  submitAppeal
 };

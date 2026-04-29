@@ -1,6 +1,7 @@
 import User from '../models/User.js';
 import MatchSession from '../models/MatchSession.js';
 import UserReview from '../models/UserReview.js';
+import Appeal from '../models/Appeal.js';
 import presenceService from './presence.service.js';
 import ApiError from '../utils/ApiError.js';
 import mongoose from 'mongoose';
@@ -162,11 +163,38 @@ const searchUsers = async (userId, keyword, page = 1, limit = 10) => {
     };
 };
 
+const submitAppeal = async (userId, reason) => {
+    if (!reason) {
+        throw new ApiError(400, 'Vui lòng cung cấp lý do kháng cáo');
+    }
+
+    const user = await User.findById(userId);
+    if (!user) throw new ApiError(404, 'Tài khoản không tồn tại');
+    
+    if (user.statusAccount !== 'banned') {
+        throw new ApiError(400, 'Tài khoản của bạn không ở trạng thái bị khóa');
+    }
+
+    // Kiểm tra xem đã có đơn pending chưa
+    const existingAppeal = await Appeal.findOne({ userId: user._id, status: 'pending' });
+    if (existingAppeal) {
+        throw new ApiError(400, 'Bạn đã có một đơn kháng cáo đang chờ xử lý. Vui lòng kiên nhẫn.');
+    }
+
+    const newAppeal = await Appeal.create({
+        userId: user._id,
+        reason: reason.trim()
+    });
+
+    return newAppeal;
+};
+
 export default {
     getUserById,
     getMyProfile,
     updateMyProfile,
     uploadAvatar,
     getUserDashboard,
-    searchUsers
+    searchUsers,
+    submitAppeal
 };

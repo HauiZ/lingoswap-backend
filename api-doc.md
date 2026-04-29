@@ -211,7 +211,22 @@ Quản lý thông tin hồ sơ người dùng.
     }
     ```
 
-### 2.4 Lấy thông tin User khác (Public Profile)
+### 2.4 Nộp đơn kháng cáo khi bị khóa tài khoản
+- **Method:** `POST`
+- **Endpoint:** `/api/users/appeal`
+- **Mô tả:** Nộp đơn kháng cáo bằng token được đính kèm trong email thông báo khóa tài khoản.
+- **Body:**
+  ```json
+  {
+    "appealToken": "eyJhbGciOiJIUzI...",
+    "reason": "Tôi cho rằng quyết định khóa tài khoản là một sự nhầm lẫn. Xin hãy xem xét lại."
+  }
+  ```
+- **Responses:**
+  - `201 Created`: Gửi đơn thành công.
+  - `400 Bad Request`: Token sai, hết hạn hoặc user đã có đơn pending.
+
+### 2.5 Lấy thông tin User khác (Public Profile)
 - **Method:** `GET`
 - **Endpoint:** `/api/users/{id}`
 - **Path Parameters:** `id` = ID của người dùng.
@@ -359,6 +374,27 @@ Dành riêng cho quản trị viên, yêu cầu `🔒 Admin Token`.
       }
     }
     ```
+
+### 3.5 Lấy danh sách đơn kháng cáo `🔒 Yêu cầu Quyền Admin`
+- **Method:** `GET`
+- **Endpoint:** `/api/admin/appeals`
+- **Query Parameters:**
+  - `status` (tuỳ chọn): Lọc theo trạng thái (`pending`, `approved`, `rejected`).
+- **Responses:**
+  - `200 OK`: Danh sách đơn kháng cáo cùng thông tin User và lý do khoá tài khoản (banReason từ Report).
+
+### 3.6 Xử lý đơn kháng cáo `🔒 Yêu cầu Quyền Admin`
+- **Method:** `PUT`
+- **Endpoint:** `/api/admin/appeals/{id}/resolve`
+- **Body:**
+  ```json
+  {
+    "status": "approved",
+    "adminNotes": "Xin lỗi vì sự cố nhầm lẫn. Đã mở khóa."
+  }
+  ```
+- **Responses:**
+  - `200 OK`: Cập nhật thành công. Nếu `approved`, tài khoản tự động được mở khóa và có email báo.
 
 ---
 
@@ -590,7 +626,6 @@ Lịch sử cuộc gọi và ghép cặp (Match Session History).
   - `400 Bad Request`: `{ "error": "Bạn đã đánh giá phiên gọi này rồi." }` hoặc `{ "error": "Đánh giá phải từ 1 đến 5 sao." }`
   - `403 Forbidden`: `{ "error": "Bạn không có quyền đánh giá phiên gọi này." }`
   - `404 Not Found`: `{ "error": "Phiên gọi không tồn tại." }`
-
 ---
 
 ## 7. Notification APIs (`/api/user/notifications`)

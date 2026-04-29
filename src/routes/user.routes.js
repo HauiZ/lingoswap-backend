@@ -1,7 +1,7 @@
 import express from 'express';
 const router = express.Router();
-import { getMyProfile, getUserById, updateMyProfile, uploadAvatar, getDashboard, searchUsers } from '../controllers/user.controller.js';
-import { authenticateToken } from '../middlewares/auth.js';
+import { getMyProfile, getUserById, updateMyProfile, uploadAvatar, getDashboard, searchUsers, submitAppeal } from '../controllers/user.controller.js';
+import { authenticateToken, verifyAppealToken } from '../middlewares/auth.js';
 import { uploadImage } from '../middlewares/upload.js';
 
 /**
@@ -31,6 +31,32 @@ router.get('/me', authenticateToken, getMyProfile);
  *         description: Thông tin tổng quan (thống kê, lịch sử, gợi ý đối tác)
  */
 router.get('/dashboard', authenticateToken, getDashboard);
+
+/**
+ * @swagger
+ * /api/users/appeal:
+ *   post:
+ *     summary: Nộp đơn kháng cáo khi tài khoản bị khóa
+ *     tags: [Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - appealToken
+ *               - reason
+ *             properties:
+ *               appealToken:
+ *                 type: string
+ *               reason:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Gửi đơn kháng cáo thành công
+ */
+router.post('/appeal', verifyAppealToken, submitAppeal);
 
 /**
  * @swagger

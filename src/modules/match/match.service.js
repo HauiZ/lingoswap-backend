@@ -78,6 +78,32 @@ export const leaveMatchAndQueueService = async (userId, currentLanguage) => {
         const day = endDate.getUTCDate();
 
         if (activeSession.durationSeconds > 0) {
+            // update streak
+            const user = await User.findById(userId);
+            // Hàm lấy chuỗi YYYY-MM-DD theo giờ Việt Nam (UTC+7)
+            const getVnDateStr = (date) => {
+                const d = new Date(date.getTime() + 7 * 60 * 60 * 1000);
+                return d.toISOString().split('T')[0];
+            };
+
+            const now = new Date();
+            const todayStr = getVnDateStr(now);
+            const lastUpdateStr = user.stats?.lastStreakUpdate ? getVnDateStr(user.stats.lastStreakUpdate) : null;
+
+            if (lastUpdateStr !== todayStr) {
+                const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+                const yesterdayStr = getVnDateStr(yesterday);
+
+                if (lastUpdateStr === yesterdayStr) {
+                    user.stats.streak += 1;
+                } else {
+                    user.stats.streak = 1;
+                }
+
+                user.stats.lastStreakUpdate = now;
+                await user.save();
+            }
+            // update totalSessions and totalHours
             await User.updateMany(
                 { _id: { $in: activeSession.participants } },
                 {

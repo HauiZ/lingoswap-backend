@@ -62,32 +62,7 @@ const getUserDashboard = async (userId) => {
     const totalHours = user.stats?.totalHours?.toFixed(1) || "0.0";
 
     // 2. Tính chuỗi ngày đăng nhập liên tiếp (Streak - O(1))
-    let currentStreak = user.stats?.streak || 0;
-    // Hàm lấy chuỗi YYYY-MM-DD theo giờ Việt Nam (UTC+7)
-    const getVnDateStr = (date) => {
-        const d = new Date(date.getTime() + 7 * 60 * 60 * 1000);
-        return d.toISOString().split('T')[0];
-    };
-
     const now = new Date();
-    const todayStr = getVnDateStr(now);
-    const lastUpdateStr = user.stats?.lastStreakUpdate ? getVnDateStr(user.stats.lastStreakUpdate) : null;
-
-    if (lastUpdateStr !== todayStr) {
-        const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-        const yesterdayStr = getVnDateStr(yesterday);
-
-        if (lastUpdateStr === yesterdayStr) {
-            currentStreak += 1;
-        } else {
-            currentStreak = 1;
-        }
-
-        User.findByIdAndUpdate(userId, {
-            'stats.streak': currentStreak,
-            'stats.lastStreakUpdate': now
-        }).catch(err => console.error("Lỗi cập nhật streak:", err));
-    }
 
     // 3. Lịch sử học trong tháng này 
     const vnNow = new Date(now.getTime() + 7 * 60 * 60 * 1000);
@@ -113,7 +88,7 @@ const getUserDashboard = async (userId) => {
     return {
         greeting: `Chào buổi sáng, ${user.profile?.fullName?.split(' ').pop() || 'bạn'}`, // Lấy tên cuối
         stats: {
-            streak: currentStreak,
+            streak: user.stats?.streak || 0,
             totalHours: parseFloat(totalHours),
             totalSessions: totalSessions
         },
@@ -170,7 +145,7 @@ const submitAppeal = async (userId, reason) => {
 
     const user = await User.findById(userId);
     if (!user) throw new ApiError(404, 'Tài khoản không tồn tại');
-    
+
     if (user.statusAccount !== 'banned') {
         throw new ApiError(400, 'Tài khoản của bạn không ở trạng thái bị khóa');
     }

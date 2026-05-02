@@ -2,7 +2,23 @@ import redis from '../../core/config/redis.js';
 import Friendship from '../friends/Friendship.js';
 
 const onlineUsers = new Map();
+const disconnectTimers = new Map(); // Grace period timers
+const GRACE_PERIOD_MS = 5000; // 5 giây chờ reconnect
+
 const setOnline = async (userId, socketId, io) => {
+    if (disconnectTimers.has(userId)) {
+        clearTimeout(disconnectTimers.get(userId));
+        disconnectTimers.delete(userId);
+        console.log(`[Presence] ${userId} RECONNECTED`);
+
+        onlineUsers.set(userId, {
+            socketId,
+            lastHeartbeat: Date.now()
+        });
+        await redis.set(`socket:${userId}`, socketId, 'EX', 86400);
+        return;
+    }
+
     const wasOnline = onlineUsers.has(userId);
 
     onlineUsers.set(userId, {
@@ -19,6 +35,26 @@ const setOnline = async (userId, socketId, io) => {
 };
 
 
+const scheduleOffline = (userId, io, onDisconnectCallback) => {
+    if (disconnectTimers.has(userId)) {
+        clearTimeout(disconnectTimers.get(userId));
+    }
+
+    const timer = setTimeout(async () => {
+        disconnectTimers.delete(userId);
+
+        // Thực sự đánh dấu offline
+        await setOffline(userId, io);
+
+        // Gọi callback để xử lý thêm (rời hàng chờ, v.v.)
+        if (onDisconnectCallback) {
+            await onDisconnectCallback();
+        }
+    }, GRACE_PERIOD_MS);
+
+    disconnectTimers.set(userId, timer);
+};
+
 const setOffline = async (userId, io) => {
     const wasOnline = onlineUsers.has(userId);
 
@@ -33,6 +69,13 @@ const setOffline = async (userId, io) => {
     }
 
     console.log(`[Presence] ${userId} OFFLINE (RAM: ${onlineUsers.size} users)`);
+};
+
+/**
+ * Kiểm tra user có đang trong trạng thái grace period không
+ */
+const isReconnecting = (userId) => {
+    return disconnectTimers.has(userId);
 };
 
 const refreshHeartbeat = (userId) => {
@@ -138,6 +181,8 @@ const getOnlineCount = () => onlineUsers.size;
 export default {
     setOnline,
     setOffline,
+    scheduleOffline,
+    isReconnecting,
     refreshHeartbeat,
     isOnline,
     getSocketId,

@@ -1,14 +1,14 @@
 import app from './src/app.js';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-import { handleMatchProvider } from './src/sockets/matchHandler.js';
-import { handleChatProvider } from './src/sockets/chatHandler.js';
-import { handlePresenceProvider } from './src/sockets/presenceHandler.js';
-import { socketAuth } from './src/sockets/index.js';
-import env from './src/config/env.js';
-import presenceService from './src/services/presence.service.js';
-import { startLastOnlineWorker } from './src/workers/syncLastOnline.js';
-import { startUnbanWorker } from './src/workers/unbanWorker.js';
+import matchModule from './src/modules/match/index.js';
+import chatModule from './src/modules/chat/index.js';
+import presenceModule from './src/modules/presence/index.js';
+import { socketAuth } from './src/core/middlewares/socketAuth.js';
+import env from './src/core/config/env.js';
+import presenceService from './src/modules/presence/presence.service.js';
+import { startLastOnlineWorker } from './src/modules/presence/syncLastOnline.js';
+import { startUnbanWorker } from './src/modules/users/unbanWorker.js';
 
 const PORT = env.PORT || 5000;
 
@@ -30,9 +30,9 @@ io.on('connection', async (socket) => {
 
   await presenceService.setOnline(userId, socket.id, io);
 
-  handleMatchProvider(io, socket);
-  handleChatProvider(io, socket);
-  handlePresenceProvider(io, socket);
+  matchModule.initSockets(io, socket);
+  chatModule.initSockets(io, socket);
+  presenceModule.initSockets(io, socket);
 
   socket.on('disconnect', async () => {
     await presenceService.setOffline(userId, io);

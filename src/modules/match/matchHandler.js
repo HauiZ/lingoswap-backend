@@ -1,4 +1,5 @@
 import redis from '../../core/config/redis.js';
+import presenceService from '../presence/presence.service.js';
 import {
     findOrQueuePartnerService,
     handleQueueTimeoutService,
@@ -176,6 +177,14 @@ export const handleMatchProvider = (io, socket) => {
         socket.to(sessionId).emit('webrtc_ice_candidate', { candidate });
     });
 
-    socket.on('disconnect', leaveMatchAndQueue);
     socket.on('leave_queue', leaveMatchAndQueue);
+
+    socket.on('disconnect', () => {
+        const userId = getUserId();
+        setTimeout(async () => {
+            if (!presenceService.isReconnecting(userId) && !presenceService.isOnline(userId)) {
+                await leaveMatchAndQueue();
+            }
+        }, 5500);
+    });
 };

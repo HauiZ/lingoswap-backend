@@ -45,6 +45,24 @@ const getListFriends = async (userId) => {
     return listFriends;
 };
 
+const sendFriendRequestNotification = async (requesterId, recipientId, friendshipId, io) => {
+    if (!io) return;
+    try {
+        const requester = await User.findById(requesterId).select('profile.fullName').lean();
+        if (requester) {
+            await notificationService.createAndPush(io, {
+                recipientId,
+                senderId: requesterId,
+                type: 'friend_request',
+                content: `${requester.profile.fullName} đã gửi cho bạn lời mời kết bạn.`,
+                metadata: { friendshipId }
+            });
+        }
+    } catch (e) {
+        console.error('Lỗi gửi thông báo kết bạn:', e.message);
+    }
+};
+
 const sendFriendRequest = async (requesterId, recipientId, io) => {
     if (requesterId === recipientId) {
         throw new ApiError(400, 'Không thể gửi yêu cầu kết bạn cho chính mình');
@@ -60,6 +78,21 @@ const sendFriendRequest = async (requesterId, recipientId, io) => {
     if (existingFriendship && existingFriendship.status === 'pending') {
         responseFriendRequest(requesterId, existingFriendship._id, "accept", io);
         return;
+    }
+
+    if (existingFriendship && existingFriendship.status === 'accepted') {
+        throw new ApiError(400, 'Các bạn đã là bạn bè');
+    }
+
+    if (existingFriendship && (existingFriendship.status === 'rejected' || existingFriendship.status === 'none')) {
+        existingFriendship.status = 'pending';
+        existingFriendship.sentAt = Date.now();
+        existingFriendship.requesterId = requesterId;
+        existingFriendship.recipientId = recipientId;
+        await existingFriendship.save();
+
+        await sendFriendRequestNotification(requesterId, recipientId, existingFriendship._id, io);
+        return existingFriendship;
     }
 
     const friendship = new Friendship({
@@ -111,6 +144,10 @@ const responseFriendRequest = async (userId, requestId, status, io) => {
     const friendship = await Friendship.findById(requestId).populate('requesterId', 'profile.fullName');
     if (!friendship) {
         throw new ApiError(404, 'Không tìm thấy yêu cầu kết bạn');
+    }
+
+    if (friendship.status !== 'pending') {
+        throw new ApiError(400, 'Yêu cầu kết bạn đã được xử lý');
     }
 
     if (friendship.recipientId.toString() !== userId.toString()) {

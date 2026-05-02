@@ -34,7 +34,7 @@ const swaggerDefinition = {
 
 const options = {
   definition: swaggerDefinition,
-  apis: ['./src/routes/*.js'], // Đường dẫn đến các file routes có JSDoc
+  apis: ['./src/**/*.js'], // Đường dẫn đến các file có JSDoc (quét toàn bộ thư mục src)
 };
 
 const swaggerSpec = swaggerJsdoc(options);

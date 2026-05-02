@@ -27,6 +27,7 @@ app.set('io', io);
 
 io.on('connection', async (socket) => {
   const userId = socket.user._id.toString();
+  const isReconnect = presenceService.isReconnecting(userId);
 
   await presenceService.setOnline(userId, socket.id, io);
 
@@ -35,7 +36,8 @@ io.on('connection', async (socket) => {
   presenceModule.initSockets(io, socket);
 
   socket.on('disconnect', async () => {
-    await presenceService.setOffline(userId, io);
+    presenceService.scheduleOffline(userId, io, async () => {
+    });
   });
 });
 

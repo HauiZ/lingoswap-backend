@@ -12,7 +12,7 @@ const __dirname = path.dirname(__filename);
  * @returns {string} HTML string đã được render
  */
 const renderEmailTemplate = (templateName, variables = {}) => {
-    const templatePath = path.join(__dirname, '..', '..', 'public', 'emails', `${templateName}.html`);
+    const templatePath = path.join(__dirname, '..', '..', '..', 'public', 'emails', `${templateName}.html`);
     let html = fs.readFileSync(templatePath, 'utf-8');
 
     for (const [key, value] of Object.entries(variables)) {

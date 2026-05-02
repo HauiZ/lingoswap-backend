@@ -7,10 +7,11 @@
 
   <!-- Badges -->
   <p>
-    <img alt="Version" src="https://img.shields.io/badge/version-1.0.0-blue.svg?cacheSeconds=2592000" />
+    <img alt="Version" src="https://img.shields.io/badge/version-1.1.0-blue.svg?cacheSeconds=2592000" />
     <img alt="Node Version" src="https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg" />
     <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg" />
     <img alt="PRs Welcome" src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" />
+    <img alt="Docker Support" src="https://img.shields.io/badge/Docker-supported-blue.svg" />
   </p>
 </div>
 
@@ -20,7 +21,7 @@
 
 **LingoSwap Backend** là lõi xử lý dữ liệu và logic nghiệp vụ cho ứng dụng LingoSwap. Hệ thống cung cấp API hiệu suất cao, xử lý kết nối thời gian thực bằng Socket.IO và WebRTC, hỗ trợ ghép cặp người dùng (Matchmaking) để học ngoại ngữ, đồng thời tích hợp hệ thống quản trị chuyên sâu.
 
-Hệ thống được thiết kế theo kiến trúc **Controller-Service-Repository**, đảm bảo tính mở rộng (Scalability), dễ bảo trì (Maintainability) và hiệu năng (Performance).
+Hệ thống được thiết kế theo kiến trúc **Modular Monolith**, đảm bảo tính đóng gói (Encapsulation), dễ bảo trì (Maintainability) và sẵn sàng chuyển đổi sang Microservices khi cần thiết.
 
 ## ✨ Tính Năng Nổi Bật
 
@@ -31,6 +32,7 @@ Hệ thống được thiết kế theo kiến trúc **Controller-Service-Reposi
 - 🛡️ **Hệ Thống Quản Trị (Admin Dashboard):** Quản lý người dùng, duyệt report, khóa/mở khóa tài khoản, phân tích thống kê trực quan.
 - ⚖️ **Hệ Thống Kháng Cáo (Appeal System):** Cho phép người dùng bị khóa gửi đơn giải trình và được tự động unban qua email workflow.
 - 📧 **Automated Emails:** Gửi email OTP, thông báo khóa tài khoản, duyệt kháng cáo bằng giao diện HTML chuyên nghiệp.
+- 🛡️ **Production Ready:** Tích hợp hệ thống Log tập trung, Kiểm tra dữ liệu và Containerization (Docker).
 
 ---
 
@@ -40,6 +42,7 @@ Hệ thống được thiết kế theo kiến trúc **Controller-Service-Reposi
 - **Database:** [MongoDB](https://www.mongodb.com/) (Mongoose ODM)
 - **Caching & Pub/Sub:** [Redis](https://redis.io/)
 - **Real-time:** [Socket.IO](https://socket.io/), [WebRTC](https://webrtc.org/)
+- **Containerization:** [Docker](https://www.docker.com/)
 - **Authentication:** [JSON Web Token (JWT)](https://jwt.io/), [Passport.js](http://www.passportjs.org/), [Bcryptjs](https://www.npmjs.com/package/bcryptjs)
 - **Mailing:** [Nodemailer](https://nodemailer.com/)
 - **Documentation:** [Swagger UI](https://swagger.io/)
@@ -52,9 +55,9 @@ Hệ thống được thiết kế theo kiến trúc **Controller-Service-Reposi
 - Node.js `v18.x` trở lên
 - MongoDB (Local hoặc MongoDB Atlas)
 - Redis Server (Đang chạy ở port 6379)
-- NPM hoặc Yarn
+- Docker (Tùy chọn)
 
-### 2. Cài đặt
+### 2. Cài đặt trực tiếp
 
 Clone repository và cài đặt các gói thư viện:
 
@@ -64,33 +67,20 @@ cd lingoswap-backend
 npm install
 ```
 
-### 3. Biến môi trường (.env)
+Tạo file `.env` từ `.env.example` và điền đầy đủ thông tin cấu hình.
 
-Tạo file `.env` tại thư mục gốc và cấu hình các biến số sau:
-
-| Biến | Ý nghĩa | Ví dụ |
-|------|---------|-------|
-| `PORT` | Port chạy server | `5000` |
-| `NODE_ENV` | Môi trường | `development` / `production` |
-| `DB_URI` | MongoDB Connection String | `mongodb://localhost:27017/lingoswap` |
-| `REDIS_URL` | Redis Connection String | `redis://localhost:6379` |
-| `JWT_SECRET` | Khóa bí mật ký JWT | `your_super_secret_key` |
-| `FRONTEND_URL` | Domain của ứng dụng Client | `http://localhost:3000` |
-| `EMAIL_USER` | Email gửi SMTP | `no-reply@lingoswap.com` |
-| `EMAIL_PASS` | Mật khẩu ứng dụng Email | `xxxx xxxx xxxx xxxx` |
-
-### 4. Khởi chạy Server
-
-**Môi trường Development (Tự động reload code):**
+**Chạy Development:**
 ```bash
 npm run dev
 ```
 
-**Môi trường Production:**
+### 3. Khởi chạy bằng Docker (Khuyên dùng cho Production)
+
+Hệ thống đã hỗ trợ Docker Compose để khởi chạy toàn bộ stack (App + MongoDB + Redis):
+
 ```bash
-npm start
+docker-compose up -d --build
 ```
-> Server sẽ lắng nghe tại: `http://localhost:5000`
 
 ---
 
@@ -103,24 +93,30 @@ LingoSwap Backend cung cấp 2 phương thức để tra cứu API:
 
 ---
 
-## 📂 Cấu Trúc Mã Nguồn
+## 📂 Cấu Trúc Mã Nguồn (Modular Monolith)
 
 ```text
 lingoswap-backend/
-├── public/                 # Chứa giao diện Email Template (HTML) và file tĩnh
+├── public/                 # File tĩnh và Email Templates
 ├── src/
-│   ├── config/             # Cấu hình Database, Redis, Môi trường
-│   ├── controllers/        # Điều hướng HTTP Request và Response (REST)
-│   ├── middlewares/        # Lớp trung gian: Auth, Upload, Error Handler
-│   ├── models/             # Schema & Model tương tác MongoDB
-│   ├── routes/             # Khai báo các Endpoints (Router)
-│   ├── services/           # Chứa Business Logic (Core của hệ thống)
-│   ├── sockets/            # Logic xử lý WebSocket (Match, Chat, WebRTC)
-│   ├── utils/              # Các hàm tiện ích (Email sender, Validators)
+│   ├── core/               # Các thành phần cốt lõi và dùng chung
+│   │   ├── config/         # Cấu hình Database, Redis, Môi trường
+│   │   ├── middlewares/    # Middleware chung (Auth, Error, Validate)
+│   │   └── utils/          # Tiện ích chung (Logger, Email, Cloudinary)
+│   ├── modules/            # Chứa các Module nghiệp vụ (Domain-driven)
+│   │   ├── auth/           # Xác thực, Đăng ký, OTP
+│   │   ├── users/          # Quản lý Profile, Kháng cáo
+│   │   ├── match/          # Ghép cặp, Matchmaking Logic
+│   │   ├── chat/           # Hội thoại, Tin nhắn
+│   │   ├── friends/        # Quản lý bạn bè
+│   │   ├── admin/          # Quản lý hệ thống, Dashboard
+│   │   ├── notifications/  # Thông báo đẩy
+│   │   ├── reports/        # Báo cáo vi phạm
+│   │   └── presence/       # Trạng thái Online/Offline
 │   └── app.js              # Khởi tạo Express App
-├── .env.example            # Template cấu hình môi trường
-├── api-doc.md              # Đặc tả API dạng Markdown
-├── package.json            # Thông tin dependencies
+├── Dockerfile              # Cấu hình Docker Image (Multi-stage build)
+├── docker-compose.yml      # Orchestration cho stack dịch vụ
+├── package.json            # Dependencies & Scripts
 └── server.js               # Entry point khởi động hệ thống
 ```
 
@@ -133,10 +129,10 @@ Mọi luồng API mới phải tuân thủ nghiêm ngặt mô hình 3 lớp:
 `Route` ➔ `Middleware (Xác thực)` ➔ `Controller (Nhận Request)` ➔ `Service (Xử lý Logic/DB)` ➔ `Controller (Trả Response)`
 
 ### 2. Xử Lý Lỗi (Error Handling)
-Luôn sử dụng `ApiError` class được định nghĩa trong `src/utils/ApiError.js` để ném lỗi trong Service. Tránh việc `try-catch` và trả về `res.status` trực tiếp trong Service.
+Luôn sử dụng `ApiError` class được định nghĩa trong `src/core/utils/ApiError.js` để ném lỗi trong Service. Tránh việc `try-catch` và trả về `res.status` trực tiếp trong Service.
 
 ```javascript
-import ApiError from '../utils/ApiError.js';
+import ApiError from '../core/utils/ApiError.js';
 
 // Trong Service
 if (!user) throw new ApiError(404, 'Tài khoản không tồn tại');

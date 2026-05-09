@@ -110,12 +110,21 @@ export const leaveMatchAndQueueService = async (userId, currentLanguage) => {
                     $inc: {
                         'stats.totalSessions': 1,
                         'stats.totalHours': durationHours
-                    },
-                    $addToSet: {
-                        [`stats.learningCalendar.${monthStr}`]: day
                     }
                 }
             ).catch(err => console.error("Lỗi cập nhật stats User:", err));
+
+            // update learningCalendar — phải đảm bảo key tồn tại trước khi $addToSet
+            const calendarKey = `stats.learningCalendar.${monthStr}`;
+            await User.updateMany(
+                { _id: { $in: activeSession.participants }, [calendarKey]: { $exists: false } },
+                { $set: { [calendarKey]: [] } }
+            ).catch(err => console.error("Lỗi khởi tạo learningCalendar key:", err));
+
+            await User.updateMany(
+                { _id: { $in: activeSession.participants } },
+                { $addToSet: { [calendarKey]: day } }
+            ).catch(err => console.error("Lỗi cập nhật learningCalendar:", err));
         } else {
             await User.updateMany(
                 { _id: { $in: activeSession.participants } },

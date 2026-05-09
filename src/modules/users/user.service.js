@@ -16,7 +16,47 @@ const getUserById = async (id) => {
 
 const getMyProfile = async (userId) => {
     const user = await User.findById(userId).select('-password -__v');
-    return user;
+    if (!user) throw new ApiError(404, 'Tài khoản không tồn tại');
+
+    const now = new Date();
+
+    // Greeting theo giờ Việt Nam
+    const vnHour = new Date(now.getTime() + 7 * 60 * 60 * 1000).getUTCHours();
+    let greetingText = 'Chào buổi sáng';
+    if (vnHour >= 12 && vnHour < 18) greetingText = 'Chào buổi chiều';
+    else if (vnHour >= 18 || vnHour < 5) greetingText = 'Chào buổi tối';
+    const firstName = user.profile?.fullName?.split(' ').pop() || 'bạn';
+
+    // Learning calendar tháng hiện tại (UTC+7)
+    const vnNow = new Date(now.getTime() + 7 * 60 * 60 * 1000);
+    const currentMonthStr = `${vnNow.getUTCFullYear()}-${String(vnNow.getUTCMonth() + 1).padStart(2, '0')}`;
+    const learningCalendar = Array.from(user.stats?.learningCalendar?.get(currentMonthStr) || []);
+
+    // Suggested partners (bạn bè online, random 4)
+    const onlineFriendIds = await presenceService.getOnlineFriendIds(userId);
+    const shuffledIds = onlineFriendIds.sort(() => 0.5 - Math.random()).slice(0, 4);
+    const onlineFriends = await User.find({ _id: { $in: shuffledIds } })
+        .select('profile.fullName profile.avatar profile.country')
+        .lean();
+    const suggestedPartners = onlineFriends.map(u => ({
+        _id: u._id,
+        fullName: u.profile?.fullName,
+        avatar: u.profile?.avatar,
+        country: u.profile?.country,
+        isOnline: true
+    }));
+
+    const profileData = user.toJSON();
+    return {
+        ...profileData,
+        greeting: `${greetingText}, ${firstName}`,
+        stats: {
+            ...profileData.stats,
+            totalHours: parseFloat((profileData.stats?.totalHours || 0).toFixed(1)),
+            learningCalendar
+        },
+        suggestedPartners
+    };
 };
 
 const updateMyProfile = async (userId, { profile, settings }) => {

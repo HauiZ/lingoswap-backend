@@ -229,6 +229,9 @@ const googleLogin = async ({ idToken, accessToken }) => {
     const email = payload.email.toLowerCase();
 
     let user = await User.findOne({ email });
+    if (user && user.statusAccount === 'banned') {
+        throw new ApiError(400, 'Tài khoản của bạn đã bị khóa');
+    }
 
     let isNewUser = false;
     if (!user) {

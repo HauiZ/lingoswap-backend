@@ -73,9 +73,9 @@ export const leaveMatchAndQueueService = async (userId, currentLanguage) => {
 
         const durationHours = activeSession.durationSeconds / 3600;
 
-        const endDate = new Date(activeSession.endedAt.getTime() + 7 * 60 * 60 * 1000);
-        const monthStr = `${endDate.getUTCFullYear()}-${String(endDate.getUTCMonth() + 1).padStart(2, '0')}`;
-        const day = endDate.getUTCDate();
+        // Ngày học theo giờ Việt Nam (UTC+7) dạng YYYY-MM-DD
+        const vnEndDate = new Date(activeSession.endedAt.getTime() + 7 * 60 * 60 * 1000);
+        const dateStr = vnEndDate.toISOString().split('T')[0];
 
         if (activeSession.durationSeconds > 0) {
             // update streak
@@ -103,28 +103,19 @@ export const leaveMatchAndQueueService = async (userId, currentLanguage) => {
                 user.stats.lastStreakUpdate = now;
                 await user.save();
             }
-            // update totalSessions and totalHours
+            // update totalSessions, totalHours và learningCalendar
             await User.updateMany(
                 { _id: { $in: activeSession.participants } },
                 {
                     $inc: {
                         'stats.totalSessions': 1,
                         'stats.totalHours': durationHours
+                    },
+                    $addToSet: {
+                        'stats.learningCalendar': dateStr
                     }
                 }
             ).catch(err => console.error("Lỗi cập nhật stats User:", err));
-
-            // update learningCalendar — phải đảm bảo key tồn tại trước khi $addToSet
-            const calendarKey = `stats.learningCalendar.${monthStr}`;
-            await User.updateMany(
-                { _id: { $in: activeSession.participants }, [calendarKey]: { $exists: false } },
-                { $set: { [calendarKey]: [] } }
-            ).catch(err => console.error("Lỗi khởi tạo learningCalendar key:", err));
-
-            await User.updateMany(
-                { _id: { $in: activeSession.participants } },
-                { $addToSet: { [calendarKey]: day } }
-            ).catch(err => console.error("Lỗi cập nhật learningCalendar:", err));
         } else {
             await User.updateMany(
                 { _id: { $in: activeSession.participants } },

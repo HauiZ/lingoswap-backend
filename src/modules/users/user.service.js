@@ -27,10 +27,8 @@ const getMyProfile = async (userId) => {
     else if (vnHour >= 18 || vnHour < 5) greetingText = 'Chào buổi tối';
     const firstName = user.profile?.fullName?.split(' ').pop() || 'bạn';
 
-    // Learning calendar tháng hiện tại (UTC+7)
-    const vnNow = new Date(now.getTime() + 7 * 60 * 60 * 1000);
-    const currentMonthStr = `${vnNow.getUTCFullYear()}-${String(vnNow.getUTCMonth() + 1).padStart(2, '0')}`;
-    const learningCalendar = Array.from(user.stats?.learningCalendar?.get(currentMonthStr) || []);
+    // Learning calendar — danh sách ngày đã học (YYYY-MM-DD)
+    const learningCalendar = user.stats?.learningCalendar || [];
 
     // Suggested partners (bạn bè online, random 4)
     const onlineFriendIds = await presenceService.getOnlineFriendIds(userId);
@@ -53,7 +51,7 @@ const getMyProfile = async (userId) => {
         stats: {
             ...profileData.stats,
             totalHours: parseFloat((profileData.stats?.totalHours || 0).toFixed(1)),
-            learningCalendar
+            learningCalendar: Array.from(learningCalendar)
         },
         suggestedPartners
     };
@@ -104,10 +102,8 @@ const getUserDashboard = async (userId) => {
     // 2. Tính chuỗi ngày đăng nhập liên tiếp (Streak - O(1))
     const now = new Date();
 
-    // 3. Lịch sử học trong tháng này 
-    const vnNow = new Date(now.getTime() + 7 * 60 * 60 * 1000);
-    const currentMonthStr = `${vnNow.getUTCFullYear()}-${String(vnNow.getUTCMonth() + 1).padStart(2, '0')}`;
-    const learningCalendar = user.stats?.learningCalendar?.get(currentMonthStr) || [];
+    // 3. Lịch sử học
+    const learningCalendar = user.stats?.learningCalendar || [];
 
     // 4. Đối tác gợi ý
     const onlineFriendIds = await presenceService.getOnlineFriendIds(userId);

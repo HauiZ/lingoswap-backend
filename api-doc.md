@@ -169,7 +169,7 @@ Quản lý thông tin hồ sơ người dùng.
         "totalHours": 47.5,
         "totalSessions": 138
       },
-      "learningCalendar": [1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13],
+      "learningCalendar": ["2026-05-09"],
       "suggestedPartners": [
         {
           "_id": "user_id_1",

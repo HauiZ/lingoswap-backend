@@ -5,6 +5,7 @@ import Appeal from './Appeal.js';
 import presenceService from '../presence/presence.service.js';
 import ApiError from '../../core/utils/ApiError.js';
 import mongoose from 'mongoose';
+import Friendship from '../friends/Friendship.js';
 
 const getUserById = async (id) => {
     const user = await User.findById(id).select('-password -__v -settings -status');
@@ -135,9 +136,20 @@ const getUserDashboard = async (userId) => {
 
 const searchUsers = async (userId, keyword, page = 1, limit = 10) => {
     const skip = (page - 1) * limit;
+    const userObjectId = typeof userId === 'string' ? new mongoose.Types.ObjectId(userId) : userId;
+
+    // Lấy danh sách bạn bè
+    const friendships = await Friendship.find({
+        $or: [{ requesterId: userObjectId }, { recipientId: userObjectId }],
+        status: 'accepted'
+    }).select('requesterId recipientId');
+
+    const friendIds = friendships.map(f => 
+        f.requesterId.toString() === userObjectId.toString() ? f.recipientId : f.requesterId
+    );
 
     const query = {
-        _id: { $ne: userId },
+        _id: { $ne: userObjectId },
         statusAccount: 'active',
         $or: [
             { 'profile.fullName': { $regex: keyword, $options: 'i' } },
@@ -146,12 +158,27 @@ const searchUsers = async (userId, keyword, page = 1, limit = 10) => {
         ]
     };
 
-    const users = await User.find(query)
-        .select('profile.fullName profile.avatar profile.country')
-        .skip(skip)
-        .limit(limit)
-        .lean();
+    const pipeline = [
+        { $match: query },
+        {
+            $addFields: {
+                isFriend: { $in: ["$_id", friendIds] }
+            }
+        },
+        { $sort: { isFriend: -1, _id: 1 } },
+        { $skip: skip },
+        { $limit: Number(limit) },
+        {
+            $project: {
+                'profile.fullName': 1,
+                'profile.avatar': 1,
+                'profile.country': 1,
+                isFriend: 1
+            }
+        }
+    ];
 
+    const users = await User.aggregate(pipeline);
     const total = await User.countDocuments(query);
 
     // Bổ sung trạng thái online
@@ -160,6 +187,7 @@ const searchUsers = async (userId, keyword, page = 1, limit = 10) => {
         fullName: u.profile?.fullName,
         avatar: u.profile?.avatar,
         country: u.profile?.country,
+        isFriend: u.isFriend,
         isOnline: presenceService.isOnline(u._id.toString())
     }));
 

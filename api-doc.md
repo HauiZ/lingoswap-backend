@@ -211,20 +211,36 @@ Quản lý thông tin hồ sơ người dùng.
     }
     ```
 
-### 2.4 Nộp đơn kháng cáo khi bị khóa tài khoản
-- **Method:** `POST`
-- **Endpoint:** `/api/users/appeal`
-- **Mô tả:** Nộp đơn kháng cáo bằng token được đính kèm trong email thông báo khóa tài khoản.
-- **Body:**
-  ```json
-  {
-    "appealToken": "eyJhbGciOiJIUzI...",
-    "reason": "Tôi cho rằng quyết định khóa tài khoản là một sự nhầm lẫn. Xin hãy xem xét lại."
-  }
-  ```
+### 2.4 Tìm kiếm Bạn bè (Theo tương tác) `🔒 Yêu cầu Token`
+- **Method:** `GET`
+- **Endpoint:** `/api/users/search-friends`
+- **Query Parameters:**
+  - `q` (tuỳ chọn): Từ khóa tìm kiếm (theo tên, email, hoặc quốc gia). Nếu không có sẽ lấy tất cả.
+  - `page` (tuỳ chọn): Trang hiện tại (Mặc định 1).
+  - `limit` (tuỳ chọn): Số kết quả mỗi trang (Mặc định 10).
 - **Responses:**
-  - `201 Created`: Gửi đơn thành công.
-  - `400 Bad Request`: Token sai, hết hạn hoặc user đã có đơn pending.
+  - `200 OK`: Bạn bè được sắp xếp ưu tiên theo thời gian nhắn tin/tương tác gần nhất.
+    ```json
+    {
+      "results": [
+        {
+          "_id": "60d5ec...",
+          "fullName": "Anna Nguyen",
+          "avatar": "url",
+          "country": "Vietnam",
+          "isFriend": true,
+          "lastInteractAt": "2023-05-10T10:30:00.000Z",
+          "isOnline": true
+        }
+      ],
+      "pagination": {
+        "total": 5,
+        "page": 1,
+        "limit": 10,
+        "totalPages": 1
+      }
+    }
+    ```
 
 ### 2.5 Lấy thông tin User khác (Public Profile)
 - **Method:** `GET`
@@ -242,7 +258,7 @@ Quản lý thông tin hồ sơ người dùng.
     ```
   - `404 Not Found`: `{ "error": "Người dùng không tồn tại" }`
 
-### 2.3 Cập nhật hồ sơ cá nhân `🔒 Yêu cầu Token`
+### 2.6 Cập nhật hồ sơ cá nhân `🔒 Yêu cầu Token`
 - **Method:** `PUT`
 - **Endpoint:** `/api/users/me`
 - **Request Body (JSON):**
@@ -270,7 +286,7 @@ Quản lý thông tin hồ sơ người dùng.
     }
     ```
 
-### 2.4 Cập nhật Avatar `🔒 Yêu cầu Token`
+### 2.7 Cập nhật Avatar `🔒 Yêu cầu Token`
 - **Method:** `POST`
 - **Endpoint:** `/api/users/avatar`
 - **Request Body:** Form-Data (`multipart/form-data`) - Chứa field `avatar` đính kèm file ảnh.
@@ -282,6 +298,21 @@ Quản lý thông tin hồ sơ người dùng.
        "avatarUrl": "https://cloudinary..."
     }
     ```
+
+### 2.8 Nộp đơn kháng cáo khi bị khóa tài khoản
+- **Method:** `POST`
+- **Endpoint:** `/api/users/appeal`
+- **Mô tả:** Nộp đơn kháng cáo bằng token được đính kèm trong email thông báo khóa tài khoản.
+- **Body:**
+  ```json
+  {
+    "appealToken": "eyJhbGciOiJIUzI...",
+    "reason": "Tôi cho rằng quyết định khóa tài khoản là một sự nhầm lẫn. Xin hãy xem xét lại."
+  }
+  ```
+- **Responses:**
+  - `201 Created`: Gửi đơn thành công.
+  - `400 Bad Request`: Token sai, hết hạn hoặc user đã có đơn pending.
 
 ---
 

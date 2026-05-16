@@ -1,6 +1,6 @@
 import express from 'express';
 const router = express.Router();
-import { getMyProfile, getUserById, updateMyProfile, uploadAvatar, getDashboard, searchUsers, submitAppeal } from './user.controller.js';
+import { getMyProfile, getUserById, updateMyProfile, uploadAvatar, getDashboard, searchUsers, searchFriends, submitAppeal } from './user.controller.js';
 import { authenticateToken, verifyAppealToken } from '../../core/middlewares/auth.js';
 import { uploadImage } from '../../core/middlewares/upload.js';
 
@@ -88,6 +88,37 @@ router.post('/appeal', verifyAppealToken, submitAppeal);
  *         description: Danh sách người dùng
  */
 router.get('/search', authenticateToken, searchUsers);
+
+/**
+ * @swagger
+ * /api/users/search-friends:
+ *   get:
+ *     summary: Tìm kiếm trong danh sách bạn bè
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: Từ khóa tìm kiếm
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Trang hiện tại (mặc định 1)
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Số lượng kết quả mỗi trang (mặc định 10)
+ *     responses:
+ *       200:
+ *         description: Danh sách bạn bè
+ */
+router.get('/search-friends', authenticateToken, searchFriends);
 
 /**
  * @swagger

@@ -6,6 +6,7 @@ import presenceService from '../presence/presence.service.js';
 import ApiError from '../../core/utils/ApiError.js';
 import mongoose from 'mongoose';
 import Friendship from '../friends/Friendship.js';
+import Conversation from '../chat/Conversation.js';
 
 const getUserById = async (id) => {
     const user = await User.findById(id).select('-password -__v -settings -status');
@@ -202,6 +203,100 @@ const searchUsers = async (userId, keyword, page = 1, limit = 10) => {
     };
 };
 
+const searchFriends = async (userId, keyword, page = 1, limit = 10) => {
+    const skip = (page - 1) * limit;
+    const userObjectId = typeof userId === 'string' ? new mongoose.Types.ObjectId(userId) : userId;
+
+    // 1. Lấy danh sách bạn bè
+    const friendships = await Friendship.find({
+        $or: [{ requesterId: userObjectId }, { recipientId: userObjectId }],
+        status: 'accepted'
+    }).select('requesterId recipientId').lean();
+
+    const friendIds = friendships.map(f => 
+        f.requesterId.toString() === userObjectId.toString() ? f.recipientId : f.requesterId
+    );
+
+    if (friendIds.length === 0) {
+        return {
+            results: [],
+            pagination: { total: 0, page: Number(page), limit: Number(limit), totalPages: 0 }
+        };
+    }
+
+    // 2. Lấy danh sách các cuộc hội thoại của user (có lastMessage)
+    const conversations = await Conversation.find({
+        participants: userObjectId,
+        lastMessage: { $exists: true, $ne: null }
+    }).select('participants updatedAt').lean();
+
+    // Map friendId -> updatedAt timestamp
+    const interactMap = {};
+    conversations.forEach(conv => {
+        // Tìm id của người bạn trong mảng participants
+        const pFriendId = conv.participants.find(p => p.toString() !== userObjectId.toString());
+        if (pFriendId) {
+            interactMap[pFriendId.toString()] = new Date(conv.updatedAt).getTime();
+        }
+    });
+
+    // 3. Build query tìm kiếm user theo keyword
+    const query = {
+        _id: { $in: friendIds },
+        statusAccount: 'active'
+    };
+
+    if (keyword) {
+        query.$or = [
+            { 'profile.fullName': { $regex: keyword, $options: 'i' } },
+            { email: { $regex: keyword, $options: 'i' } },
+            { 'profile.country': { $regex: keyword, $options: 'i' } }
+        ];
+    }
+
+    // Lấy TẤT CẢ user khớp keyword (chưa phân trang)
+    let matchedUsers = await User.find(query)
+        .select('profile.fullName profile.avatar profile.country')
+        .lean();
+
+    // 4. Sort trên RAM dựa vào interactMap
+    matchedUsers.sort((a, b) => {
+        const timeA = interactMap[a._id.toString()] || 0;
+        const timeB = interactMap[b._id.toString()] || 0;
+        
+        // Nếu time bằng nhau thì sort theo ID để ổn định
+        if (timeB === timeA) {
+             return a._id.toString().localeCompare(b._id.toString());
+        }
+        return timeB - timeA;
+    });
+
+    const total = matchedUsers.length;
+
+    // 5. Cắt mảng để phân trang
+    const paginatedUsers = matchedUsers.slice(skip, skip + Number(limit));
+
+    const results = paginatedUsers.map(u => ({
+        _id: u._id,
+        fullName: u.profile?.fullName,
+        avatar: u.profile?.avatar,
+        country: u.profile?.country,
+        isFriend: true,
+        lastInteractAt: interactMap[u._id.toString()] ? new Date(interactMap[u._id.toString()]) : new Date(0),
+        isOnline: presenceService.isOnline(u._id.toString())
+    }));
+
+    return {
+        results,
+        pagination: {
+            total,
+            page: Number(page),
+            limit: Number(limit),
+            totalPages: Math.ceil(total / limit)
+        }
+    };
+};
+
 const submitAppeal = async (userId, reason) => {
     if (!reason) {
         throw new ApiError(400, 'Vui lòng cung cấp lý do kháng cáo');
@@ -235,5 +330,6 @@ export default {
     uploadAvatar,
     getUserDashboard,
     searchUsers,
+    searchFriends,
     submitAppeal
 };

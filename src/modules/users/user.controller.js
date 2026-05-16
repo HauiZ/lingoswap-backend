@@ -73,6 +73,19 @@ const searchUsers = async (req, res) => {
   }
 };
 
+// Tìm kiếm bạn bè (ưu tiên tương tác nhiều lên đầu)
+const searchFriends = async (req, res) => {
+  try {
+    const { q, page, limit } = req.query;
+    const keyword = q ? String(q).trim() : '';
+    const results = await userService.searchFriends(req.user.id, keyword, page, limit);
+    res.json(results);
+  } catch (error) {
+    logger.error(error.message);
+    res.status(error.statusCode || 500).json({ error: error.message || 'Lỗi khi tìm kiếm bạn bè' });
+  }
+};
+
 // Nộp đơn kháng cáo
 const submitAppeal = async (req, res) => {
   try {
@@ -93,5 +106,6 @@ export {
   uploadAvatar,
   getDashboard,
   searchUsers,
+  searchFriends,
   submitAppeal
 };

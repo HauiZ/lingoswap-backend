@@ -29,7 +29,7 @@ router.get('/', authenticateToken, getNotifications);
 
 /**
  * @swagger
- * /api/user/notifications/unread-count:
+ * /api/user/notifications/unread/count:
  *   get:
  *     summary: Lấy số lượng thông báo chưa đọc
  *     tags: [Notifications]
@@ -39,11 +39,11 @@ router.get('/', authenticateToken, getNotifications);
  *       200:
  *         description: Số lượng thông báo chưa đọc
  */
-router.get('/unread-count', authenticateToken, getUnreadCount);
+router.get('/unread/count', authenticateToken, getUnreadCount);
 
 /**
  * @swagger
- * /api/user/notifications/read-all:
+ * /api/user/notifications:
  *   patch:
  *     summary: Đánh dấu tất cả thông báo đã đọc
  *     tags: [Notifications]
@@ -53,11 +53,11 @@ router.get('/unread-count', authenticateToken, getUnreadCount);
  *       200:
  *         description: Thành công
  */
-router.patch('/mark-all-read', authenticateToken, markAllAsRead);
+router.patch('/', authenticateToken, markAllAsRead);
 
 /**
  * @swagger
- * /api/user/notifications/{notificationId}/read:
+ * /api/user/notifications/{notificationId}/status:
  *   patch:
  *     summary: Đánh dấu 1 thông báo đã đọc
  *     tags: [Notifications]
@@ -73,6 +73,6 @@ router.patch('/mark-all-read', authenticateToken, markAllAsRead);
  *       200:
  *         description: Thành công
  */
-router.patch('/:notificationId/read', authenticateToken, markAsRead);
+router.patch('/:notificationId/status', authenticateToken, markAsRead);
 
 export default router;

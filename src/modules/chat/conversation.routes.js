@@ -7,7 +7,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/user/conversations/all:
+ * /api/user/conversations:
  *   get:
  *     summary: Lấy tất cả các cuộc trò chuyện
  *     tags: [Messages]
@@ -17,7 +17,7 @@ const router = express.Router();
  *       200:
  *         description: Danh sách tất cả các cuộc trò chuyện
  */
-router.get('/all', authenticateToken, getAllConversation);
+router.get('/', authenticateToken, getAllConversation);
 
 /**
  * @swagger
@@ -41,7 +41,7 @@ router.get('/:conversationId', authenticateToken, getMessagesByConversation);
 
 /**
  * @swagger
- * /api/user/conversations/upload-image:
+ * /api/user/conversations/images:
  *   post:
  *     summary: Upload ảnh chat lên Cloudinary, trả về URL để gửi qua socket
  *     tags: [Messages]
@@ -70,7 +70,7 @@ router.get('/:conversationId', authenticateToken, getMessagesByConversation);
  *                   example: "https://res.cloudinary.com/..."
  */
 router.post(
-    '/upload-image',
+    '/images',
     authenticateToken,
     uploadChatImage.single('image'),
     sendImageMessage

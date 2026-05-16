@@ -40,7 +40,7 @@ router.get('/:sessionId', authenticateToken, getMatchSessionDetails);
 
 /**
  * @swagger
- * /api/user/matches/{sessionId}/review:
+ * /api/user/matches/{sessionId}/reviews:
  *   post:
  *     summary: Đánh giá một phiên gọi và người dùng đối tác
  *     tags: [Matches]
@@ -75,6 +75,6 @@ router.get('/:sessionId', authenticateToken, getMatchSessionDetails);
  *       400:
  *         description: Đã đánh giá rồi hoặc dữ liệu không hợp lệ
  */
-router.post('/:sessionId/review', authenticateToken, createReview);
+router.post('/:sessionId/reviews', authenticateToken, createReview);
 
 export default router;

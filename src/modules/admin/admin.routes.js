@@ -35,8 +35,8 @@ router.get('/users', getAllUsers);
 
 /**
  * @swagger
- * /api/admin/users/{id}/ban:
- *   put:
+ * /api/admin/users/{id}/status:
+ *   patch:
  *     summary: Khóa (Ban) người dùng vì vi phạm (Chỉ Admin)
  *     tags: [Admin]
  *     security:
@@ -51,7 +51,7 @@ router.get('/users', getAllUsers);
  *       200:
  *         description: Đã khóa (Ban) người dùng thành công
  */
-router.put('/users/:id/ban', banUser);
+router.patch('/users/:id/status', banUser);
 
 /**
  * @swagger
@@ -152,8 +152,8 @@ router.get('/appeals', getAppeals);
 
 /**
  * @swagger
- * /api/admin/appeals/{id}/resolve:
- *   put:
+ * /api/admin/appeals/{id}/status:
+ *   patch:
  *     summary: Xử lý đơn kháng cáo
  *     tags: [Admin]
  *     security:
@@ -182,6 +182,6 @@ router.get('/appeals', getAppeals);
  *       200:
  *         description: Xử lý kháng cáo thành công
  */
-router.put('/appeals/:id/resolve', resolveAppeal);
+router.patch('/appeals/:id/status', resolveAppeal);
 
 export default router;

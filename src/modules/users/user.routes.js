@@ -34,7 +34,7 @@ router.get('/dashboard', authenticateToken, getDashboard);
 
 /**
  * @swagger
- * /api/users/appeal:
+ * /api/users/appeals:
  *   post:
  *     summary: Nộp đơn kháng cáo khi tài khoản bị khóa
  *     tags: [Users]
@@ -56,11 +56,11 @@ router.get('/dashboard', authenticateToken, getDashboard);
  *       201:
  *         description: Gửi đơn kháng cáo thành công
  */
-router.post('/appeal', verifyAppealToken, submitAppeal);
+router.post('/appeals', verifyAppealToken, submitAppeal);
 
 /**
  * @swagger
- * /api/users/search:
+ * /api/users:
  *   get:
  *     summary: Tìm kiếm người dùng theo tên, email hoặc quốc gia
  *     tags: [Users]
@@ -87,11 +87,11 @@ router.post('/appeal', verifyAppealToken, submitAppeal);
  *       200:
  *         description: Danh sách người dùng
  */
-router.get('/search', authenticateToken, searchUsers);
+router.get('/', authenticateToken, searchUsers);
 
 /**
  * @swagger
- * /api/users/search-friends:
+ * /api/users/me/friends:
  *   get:
  *     summary: Tìm kiếm trong danh sách bạn bè
  *     tags: [Users]
@@ -118,7 +118,7 @@ router.get('/search', authenticateToken, searchUsers);
  *       200:
  *         description: Danh sách bạn bè
  */
-router.get('/search-friends', authenticateToken, searchFriends);
+router.get('/me/friends', authenticateToken, searchFriends);
 
 /**
  * @swagger
@@ -172,9 +172,9 @@ router.put('/me', authenticateToken, updateMyProfile);
 
 /**
  * @swagger
- * /api/users/avatar:
- *   post:
- *     summary: Tải lên avatar cá nhân (Hỗ trợ multipart/form-data)
+ * /api/users/me/avatar:
+ *   put:
+ *     summary: Cập nhật avatar cá nhân (Hỗ trợ multipart/form-data)
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
@@ -190,10 +190,10 @@ router.put('/me', authenticateToken, updateMyProfile);
  *                 format: binary
  *     responses:
  *       200:
- *         description: Avatar tải lên thành công trả về URL
+ *         description: Avatar cập nhật thành công trả về URL
  *       400:
  *         description: Vui lòng cung cấp file ảnh
  */
-router.post('/avatar', authenticateToken, uploadImage.single('avatar'), uploadAvatar);
+router.put('/me/avatar', authenticateToken, uploadImage.single('avatar'), uploadAvatar);
 
 export default router;

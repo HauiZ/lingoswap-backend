@@ -134,7 +134,7 @@ router.post('/logout', logout);
 
 /**
  * @swagger
- * /api/auth/token:
+ * /api/auth/refresh-token:
  *   post:
  *     summary: Làm mới access token bằng refresh token trong cookie
  *     tags: [Auth]
@@ -146,11 +146,11 @@ router.post('/logout', logout);
  *       403:
  *         description: Refresh token không hợp lệ
  */
-router.post('/token', refreshAccessToken);
+router.post('/refresh-token', refreshAccessToken);
 
 /**
  * @swagger
- * /api/auth/password/change:
+ * /api/auth/password:
  *   patch:
  *     summary: Thay đổi mật khẩu
  *     tags: [Auth]
@@ -176,7 +176,7 @@ router.post('/token', refreshAccessToken);
  *       400:
  *         description: Sai mật khẩu cũ
  */
-router.patch('/password/change', authenticateToken, changePassword);
+router.patch('/password', authenticateToken, changePassword);
 
 /**
  * @swagger
@@ -238,7 +238,7 @@ router.post('/password/reset', resetPassword);
 
 /**
  * @swagger
- * /api/auth/create:
+ * /api/auth/admin:
  *   post:
  *     summary: Tạo tài khoản Admin mới (Chỉ Admin)
  *     tags: [Auth]
@@ -268,6 +268,6 @@ router.post('/password/reset', resetPassword);
  *       400:
  *         description: Dữ liệu không hợp lệ
  */
-router.post('/create', createAdmin);
+router.post('/admin', createAdmin);
 
 export default router;

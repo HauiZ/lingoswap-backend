@@ -6,7 +6,7 @@ const router = Router();
 
 /**
  * @swagger
- * /api/user/friends/friends:
+ * /api/user/friends:
  *   get:
  *     summary: Lấy danh sách bạn bè
  *     tags: [Friends]
@@ -16,11 +16,11 @@ const router = Router();
  *       200:
  *         description: Danh sách bạn bè
  */
-router.get('/friends', authenticateToken, getListFriends);
+router.get('/', authenticateToken, getListFriends);
 
 /**
  * @swagger
- * /api/user/friends/friends/requests:
+ * /api/user/friends/requests:
  *   get:
  *     summary: Lấy danh sách yêu cầu kết bạn
  *     tags: [Friends]
@@ -30,11 +30,11 @@ router.get('/friends', authenticateToken, getListFriends);
  *       200:
  *         description: Danh sách yêu cầu kết bạn
  */
-router.get('/friends/requests', authenticateToken, getFriendRequests);
+router.get('/requests', authenticateToken, getFriendRequests);
 
 /**
  * @swagger
- * /api/user/friends/friends/:recipientId/request:
+ * /api/user/friends/{recipientId}/requests:
  *   post:
  *     summary: Gửi yêu cầu kết bạn
  *     tags: [Friends]
@@ -50,11 +50,11 @@ router.get('/friends/requests', authenticateToken, getFriendRequests);
  *       200:
  *         description: Yêu cầu kết bạn đã được gửi
  */
-router.post('/friends/:recipientId/request', authenticateToken, sendFriendRequest);
+router.post('/:recipientId/requests', authenticateToken, sendFriendRequest);
 
 /**
  * @swagger
- * /api/user/friends/friends/:requestId/response:
+ * /api/user/friends/requests/{requestId}:
  *   patch:
  *     summary: Phản hồi yêu cầu kết bạn
  *     tags: [Friends]
@@ -82,11 +82,11 @@ router.post('/friends/:recipientId/request', authenticateToken, sendFriendReques
  *       200:
  *         description: Yêu cầu kết bạn đã được phản hồi
  */
-router.patch('/friends/:requestId/response', authenticateToken, responseFriendRequest);
+router.patch('/requests/:requestId', authenticateToken, responseFriendRequest);
 
 /**
  * @swagger
- * /api/user/friends/friends/:friendId:
+ * /api/user/friends/{friendId}:
  *   delete:
  *     summary: Hủy kết bạn
  *     tags: [Friends]
@@ -102,11 +102,11 @@ router.patch('/friends/:requestId/response', authenticateToken, responseFriendRe
  *       200:
  *         description: Đã hủy kết bạn
  */
-router.delete('/friends/:friendId', authenticateToken, removeFriend);
+router.delete('/:friendId', authenticateToken, removeFriend);
 
 /**
  * @swagger
- * /api/user/friends/friends/:targetUserId/status:
+ * /api/user/friends/{targetUserId}/status:
  *   get:
  *     summary: Kiểm tra trạng thái bạn bè với một người dùng khác
  *     tags: [Friends]
@@ -122,11 +122,11 @@ router.delete('/friends/:friendId', authenticateToken, removeFriend);
  *       200:
  *         description: Trạng thái bạn bè (none, friends, request_sent, request_received)
  */
-router.get('/friends/:targetUserId/status', authenticateToken, checkFriendStatus);
+router.get('/:targetUserId/status', authenticateToken, checkFriendStatus);
 
 /**
  * @swagger
- * /api/user/friends/online-friends:
+ * /api/user/friends/online:
  *   get:
  *     summary: Lấy danh sách ID các bạn bè đang online
  *     tags: [Friends]
@@ -136,6 +136,6 @@ router.get('/friends/:targetUserId/status', authenticateToken, checkFriendStatus
  *       200:
  *         description: Trả về danh sách ID của bạn bè đang online
  */
-router.get('/online-friends', authenticateToken, getOnlineFriends);
+router.get('/online', authenticateToken, getOnlineFriends);
 
 export default router;

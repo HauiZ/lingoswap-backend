@@ -75,7 +75,7 @@ Các API liên quan đến xác thực, đăng nhập và quản lý tài khoả
 
 ### 1.5 Làm mới Token
 - **Method:** `POST`
-- **Endpoint:** `/api/auth/token`
+- **Endpoint:** `/api/auth/refresh-token`
 - **Request Header/Cookies:** Gửi kèm cookie `refreshToken` đã được set ở bước Đăng nhập.
 - **Responses:**
   - `200 OK`: 
@@ -95,7 +95,7 @@ Các API liên quan đến xác thực, đăng nhập và quản lý tài khoả
 
 ### 1.7 Thay đổi mật khẩu `🔒 Yêu cầu Token`
 - **Method:** `PATCH`
-- **Endpoint:** `/api/auth/password/change`
+- **Endpoint:** `/api/auth/password`
 - **Request Body (JSON):**
   ```json
   {
@@ -184,7 +184,7 @@ Quản lý thông tin hồ sơ người dùng.
 
 ### 2.3 Tìm kiếm Người dùng `🔒 Yêu cầu Token`
 - **Method:** `GET`
-- **Endpoint:** `/api/users/search`
+- **Endpoint:** `/api/users`
 - **Query Parameters:**
   - `q` (bắt buộc): Từ khóa tìm kiếm (theo tên, email, hoặc quốc gia).
   - `page` (tuỳ chọn): Trang hiện tại (Mặc định 1).
@@ -213,7 +213,7 @@ Quản lý thông tin hồ sơ người dùng.
 
 ### 2.4 Tìm kiếm Bạn bè (Theo tương tác) `🔒 Yêu cầu Token`
 - **Method:** `GET`
-- **Endpoint:** `/api/users/search-friends`
+- **Endpoint:** `/api/users/me/friends`
 - **Query Parameters:**
   - `q` (tuỳ chọn): Từ khóa tìm kiếm (theo tên, email, hoặc quốc gia). Nếu không có sẽ lấy tất cả.
   - `page` (tuỳ chọn): Trang hiện tại (Mặc định 1).
@@ -287,8 +287,8 @@ Quản lý thông tin hồ sơ người dùng.
     ```
 
 ### 2.7 Cập nhật Avatar `🔒 Yêu cầu Token`
-- **Method:** `POST`
-- **Endpoint:** `/api/users/avatar`
+- **Method:** `PUT`
+- **Endpoint:** `/api/users/me/avatar`
 - **Request Body:** Form-Data (`multipart/form-data`) - Chứa field `avatar` đính kèm file ảnh.
 - **Responses:**
   - `200 OK`: 
@@ -301,7 +301,7 @@ Quản lý thông tin hồ sơ người dùng.
 
 ### 2.8 Nộp đơn kháng cáo khi bị khóa tài khoản
 - **Method:** `POST`
-- **Endpoint:** `/api/users/appeal`
+- **Endpoint:** `/api/users/appeals`
 - **Mô tả:** Nộp đơn kháng cáo bằng token được đính kèm trong email thông báo khóa tài khoản.
 - **Body:**
   ```json
@@ -339,8 +339,8 @@ Dành riêng cho quản trị viên, yêu cầu `🔒 Admin Token`.
     ```
 
 ### 3.2 Khóa (Ban) tài khoản người dùng
-- **Method:** `PUT`
-- **Endpoint:** `/api/admin/users/{id}/ban`
+- **Method:** `PATCH`
+- **Endpoint:** `/api/admin/users/{id}/status`
 - **Path Parameters:** `id` = ID của người dùng.
 - **Responses:**
   - `200 OK`: 
@@ -415,8 +415,8 @@ Dành riêng cho quản trị viên, yêu cầu `🔒 Admin Token`.
   - `200 OK`: Danh sách đơn kháng cáo cùng thông tin User và lý do khoá tài khoản (banReason từ Report).
 
 ### 3.6 Xử lý đơn kháng cáo `🔒 Yêu cầu Quyền Admin`
-- **Method:** `PUT`
-- **Endpoint:** `/api/admin/appeals/{id}/resolve`
+- **Method:** `PATCH`
+- **Endpoint:** `/api/admin/appeals/{id}/status`
 - **Body:**
   ```json
   {
@@ -434,7 +434,7 @@ Quản lý lịch sử và tin nhắn trong ứng dụng.
 
 ### 4.1 Lấy tất cả các cuộc trò chuyện `🔒 Yêu cầu Token`
 - **Method:** `GET`
-- **Endpoint:** `/api/user/conversations/all`
+- **Endpoint:** `/api/user/conversations`
 - **Responses:**
   - `200 OK`:
     ```json
@@ -482,7 +482,7 @@ Quản lý lịch sử và tin nhắn trong ứng dụng.
 
 ### 4.3 Upload ảnh chat `🔒 Yêu cầu Token`
 - **Method:** `POST`
-- **Endpoint:** `/api/user/conversations/upload-image`
+- **Endpoint:** `/api/user/conversations/images`
 - **Request Body:** Form-Data (`multipart/form-data`) - Chứa field `image` (file ảnh) và `partnerId` (bắt buộc), `matchSessionId` (tùy chọn).
 - **Responses:**
   - `201 Created`: Trả về Message object đã lưu DB (chứa URL ảnh). Đối phương sẽ tự nhận được ảnh qua Socket.
@@ -502,7 +502,7 @@ Mọi việc liên quan đến trạng thái gửi, nhận và quản lý bạn 
 
 ### 5.1 Lấy danh sách yêu cầu kết bạn `🔒 Yêu cầu Token`
 - **Method:** `GET`
-- **Endpoint:** `/api/user/friends/friends/requests`
+- **Endpoint:** `/api/user/friends/requests`
 - **Responses:**
   - `200 OK`:
     ```json
@@ -522,7 +522,7 @@ Mọi việc liên quan đến trạng thái gửi, nhận và quản lý bạn 
 
 ### 5.2 Gửi yêu cầu kết bạn `🔒 Yêu cầu Token`
 - **Method:** `POST`
-- **Endpoint:** `/api/user/friends/friends/{recipientId}/request`
+- **Endpoint:** `/api/user/friends/{recipientId}/requests`
 - **Path Parameters:** `recipientId` = ID đích.
 - **Responses:**
   - `201 Created`: `{ "message": "Đã gửi yêu cầu kết bạn" }`
@@ -530,7 +530,7 @@ Mọi việc liên quan đến trạng thái gửi, nhận và quản lý bạn 
 
 ### 5.3 Phản hồi yêu cầu kết bạn `🔒 Yêu cầu Token`
 - **Method:** `PATCH`
-- **Endpoint:** `/api/user/friends/friends/{requestId}/response`
+- **Endpoint:** `/api/user/friends/requests/{requestId}`
 - **Path Parameters:** `requestId` = ID của lời mời (FriendshipRequest).
 - **Request Body (JSON):**
   ```json
@@ -546,7 +546,7 @@ Mọi việc liên quan đến trạng thái gửi, nhận và quản lý bạn 
 
 ### 5.4 Hủy kết bạn `🔒 Yêu cầu Token`
 - **Method:** `DELETE`
-- **Endpoint:** `/api/user/friends/friends/{friendId}`
+- **Endpoint:** `/api/user/friends/{friendId}`
 - **Path Parameters:** `friendId` = ID của người bạn cần hủy kết bạn.
 - **Responses:**
   - `200 OK`: `{ "message": "Đã hủy kết bạn" }`
@@ -554,7 +554,7 @@ Mọi việc liên quan đến trạng thái gửi, nhận và quản lý bạn 
 
 ### 5.5 Kiểm tra trạng thái bạn bè `🔒 Yêu cầu Token`
 - **Method:** `GET`
-- **Endpoint:** `/api/user/friends/friends/{targetUserId}/status`
+- **Endpoint:** `/api/user/friends/{targetUserId}/status`
 - **Path Parameters:** `targetUserId` = ID của người dùng cần kiểm tra.
 - **Responses:**
   - `200 OK`: 
@@ -567,7 +567,7 @@ Mọi việc liên quan đến trạng thái gửi, nhận và quản lý bạn 
 
 ### 5.6 Lấy danh sách ID bạn bè đang online `🔒 Yêu cầu Token`
 - **Method:** `GET`
-- **Endpoint:** `/api/user/friends/online-friends`
+- **Endpoint:** `/api/user/friends/online`
 - **Responses:**
   - `200 OK`: 
     ```json
@@ -629,7 +629,7 @@ Lịch sử cuộc gọi và ghép cặp (Match Session History).
 
 ### 6.3 Đánh giá phiên gọi và người bạn ghép cặp `🔒 Yêu cầu Token`
 - **Method:** `POST`
-- **Endpoint:** `/api/user/matches/{sessionId}/review`
+- **Endpoint:** `/api/user/matches/{sessionId}/reviews`
 - **Path Parameters:** `sessionId` = ID của phiên gọi.
 - **Request Body (JSON):**
   ```json
@@ -683,19 +683,19 @@ Quản lý thông báo người dùng.
 
 ### 7.2 Đếm số thông báo chưa đọc `🔒 Yêu cầu Token`
 - **Method:** `GET`
-- **Endpoint:** `/api/user/notifications/unread-count`
+- **Endpoint:** `/api/user/notifications/unread/count`
 - **Responses:**
   - `200 OK`: `{ "unreadCount": 5 }`
 
 ### 7.3 Đánh dấu 1 thông báo đã đọc `🔒 Yêu cầu Token`
 - **Method:** `PATCH`
-- **Endpoint:** `/api/user/notifications/{notificationId}/read`
+- **Endpoint:** `/api/user/notifications/{notificationId}/status`
 - **Responses:**
   - `200 OK`: `{ "message": "Đã đánh dấu đã đọc" }`
 
 ### 7.4 Đánh dấu tất cả thông báo đã đọc `🔒 Yêu cầu Token`
 - **Method:** `PATCH`
-- **Endpoint:** `/api/user/notifications/read-all`
+- **Endpoint:** `/api/user/notifications`
 - **Responses:**
   - `200 OK`: `{ "message": "Đã đánh dấu tất cả đã đọc" }`
 

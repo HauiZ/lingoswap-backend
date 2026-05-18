@@ -25,14 +25,12 @@ const getMatchHistory = async (userId, limit = 20, page = 1) => {
         const partner = session.participants.find(p => p._id.toString() !== userId.toString());
         const conversation = conversations.find(c => c.matchSessionId?.toString() === session._id.toString());
         const myReview = reviews.find(r => r.matchSessionId.toString() === session._id.toString() && r.reviewerId.toString() === userId.toString());
-        const partnerReview = reviews.find(r => r.matchSessionId.toString() === session._id.toString() && r.targetUserId.toString() === userId.toString());
 
         return {
             ...session,
             conversationId: conversation ? conversation._id : null,
             partner,
-            myReview: myReview || null,
-            partnerReview: partnerReview || null
+            myReview: myReview || null
         };
     });
 
@@ -63,15 +61,13 @@ const getMatchSessionDetails = async (sessionId, userId) => {
 
     const reviews = await UserReview.find({ matchSessionId: sessionId }).lean();
     const myReview = reviews.find(r => r.reviewerId.toString() === userId.toString());
-    const partnerReview = reviews.find(r => r.targetUserId.toString() === userId.toString());
 
     return {
         ...session,
         conversationId: conversation ? conversation._id : null,
         partner,
         messages,
-        myReview: myReview || null,
-        partnerReview: partnerReview || null
+        myReview: myReview || null
     };
 };
 

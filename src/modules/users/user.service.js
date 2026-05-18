@@ -46,6 +46,17 @@ const getMyProfile = async (userId) => {
         isOnline: true
     }));
 
+    // Kiểm tra xem hôm nay đã cập nhật streak chưa (theo giờ VN)
+    const getVnDateStr = (date) => {
+        const d = new Date(date.getTime() + 7 * 60 * 60 * 1000);
+        return d.toISOString().split('T')[0];
+    };
+    
+    let isStreakUpdatedToday = false;
+    if (user.stats?.lastStreakUpdate) {
+        isStreakUpdatedToday = getVnDateStr(user.stats.lastStreakUpdate) === getVnDateStr(now);
+    }
+
     const profileData = user.toJSON();
     return {
         ...profileData,
@@ -53,7 +64,8 @@ const getMyProfile = async (userId) => {
         stats: {
             ...profileData.stats,
             totalHours: parseFloat((profileData.stats?.totalHours || 0).toFixed(1)),
-            learningCalendar: Array.from(learningCalendar)
+            learningCalendar: Array.from(learningCalendar),
+            isStreakUpdatedToday
         },
         suggestedPartners
     };

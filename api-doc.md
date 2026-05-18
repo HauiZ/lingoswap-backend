@@ -152,7 +152,25 @@ Quản lý thông tin hồ sơ người dùng.
       "profile": { "fullName": "Nguyen Van A", "bio": "", "avatar": "..." },
       "settings": { "theme": "light", "uiLanguage": "vi" },
       "role": "user",
-      "statusAccount": "active"
+      "statusAccount": "active",
+      "greeting": "Chào buổi sáng, A",
+      "stats": {
+        "streak": 5,
+        "lastStreakUpdate": "2023-10-02T08:00:00.000Z",
+        "totalHours": 12.5,
+        "totalSessions": 20,
+        "learningCalendar": ["2023-10-01", "2023-10-02"],
+        "isStreakUpdatedToday": true
+      },
+      "suggestedPartners": [
+        {
+          "_id": "partner_id",
+          "fullName": "Tran B",
+          "avatar": "url",
+          "country": "VN",
+          "isOnline": true
+        }
+      ]
     }
     ```
 

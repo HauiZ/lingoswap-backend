@@ -19,15 +19,20 @@ const getMatchHistory = async (userId, limit = 20, page = 1) => {
 
     const sessionIds = sessions.map(s => s._id);
     const conversations = await Conversation.find({ matchSessionId: { $in: sessionIds } }).lean();
+    const reviews = await UserReview.find({ matchSessionId: { $in: sessionIds } }).lean();
 
     const formattedSessions = sessions.map(session => {
         const partner = session.participants.find(p => p._id.toString() !== userId.toString());
         const conversation = conversations.find(c => c.matchSessionId?.toString() === session._id.toString());
+        const myReview = reviews.find(r => r.matchSessionId.toString() === session._id.toString() && r.reviewerId.toString() === userId.toString());
+        const partnerReview = reviews.find(r => r.matchSessionId.toString() === session._id.toString() && r.targetUserId.toString() === userId.toString());
 
         return {
             ...session,
             conversationId: conversation ? conversation._id : null,
-            partner
+            partner,
+            myReview: myReview || null,
+            partnerReview: partnerReview || null
         };
     });
 
@@ -56,11 +61,17 @@ const getMatchSessionDetails = async (sessionId, userId) => {
         messages = await conversationService.getMessagesByConversation(conversation._id, 100, 1);
     }
 
+    const reviews = await UserReview.find({ matchSessionId: sessionId }).lean();
+    const myReview = reviews.find(r => r.reviewerId.toString() === userId.toString());
+    const partnerReview = reviews.find(r => r.targetUserId.toString() === userId.toString());
+
     return {
         ...session,
         conversationId: conversation ? conversation._id : null,
         partner,
-        messages
+        messages,
+        myReview: myReview || null,
+        partnerReview: partnerReview || null
     };
 };
 

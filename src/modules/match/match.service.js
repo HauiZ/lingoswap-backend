@@ -78,8 +78,8 @@ export const leaveMatchAndQueueService = async (userId, currentLanguage) => {
         const dateStr = vnEndDate.toISOString().split('T')[0];
 
         if (activeSession.durationSeconds > 0) {
-            // update streak
-            const user = await User.findById(userId);
+            // update streak cho tất cả người tham gia
+            const users = await User.find({ _id: { $in: activeSession.participants } });
             // Hàm lấy chuỗi YYYY-MM-DD theo giờ Việt Nam (UTC+7)
             const getVnDateStr = (date) => {
                 const d = new Date(date.getTime() + 7 * 60 * 60 * 1000);
@@ -88,20 +88,22 @@ export const leaveMatchAndQueueService = async (userId, currentLanguage) => {
 
             const now = new Date();
             const todayStr = getVnDateStr(now);
-            const lastUpdateStr = user.stats?.lastStreakUpdate ? getVnDateStr(user.stats.lastStreakUpdate) : null;
+            const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+            const yesterdayStr = getVnDateStr(yesterday);
 
-            if (lastUpdateStr !== todayStr) {
-                const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-                const yesterdayStr = getVnDateStr(yesterday);
+            for (const p of users) {
+                const lastUpdateStr = p.stats?.lastStreakUpdate ? getVnDateStr(p.stats.lastStreakUpdate) : null;
 
-                if (lastUpdateStr === yesterdayStr) {
-                    user.stats.streak += 1;
-                } else {
-                    user.stats.streak = 1;
+                if (lastUpdateStr !== todayStr) {
+                    if (lastUpdateStr === yesterdayStr) {
+                        p.stats.streak += 1;
+                    } else {
+                        p.stats.streak = 1;
+                    }
+
+                    p.stats.lastStreakUpdate = now;
+                    await p.save();
                 }
-
-                user.stats.lastStreakUpdate = now;
-                await user.save();
             }
             // update totalSessions, totalHours và learningCalendar
             await User.updateMany(

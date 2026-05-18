@@ -5,6 +5,7 @@ import ApiError from '../../core/utils/ApiError.js';
 import User from "../users/User.js";
 import notificationService from '../notifications/notification.service.js';
 import presenceService from '../presence/presence.service.js';
+import redis from '../../core/config/redis.js';
 
 const getListFriends = async (userId) => {
     const friendships = await Friendship.find({
@@ -190,6 +191,15 @@ const responseFriendRequest = async (userId, requestId, status, io) => {
                         }
                     );
                 }
+
+                const requesterSocketId = await redis.get(`socket:${friendship.requesterId._id}`);
+                if (requesterSocketId) {
+                    io.to(requesterSocketId).emit('friend_request_responded', {
+                        friendshipId: friendship._id,
+                        recipientId: userId,
+                        status: 'accepted'
+                    });
+                }
             } catch (e) {
                 console.error('Lỗi gửi thông báo đồng ý kết bạn:', e.message);
             }
@@ -221,6 +231,15 @@ const responseFriendRequest = async (userId, requestId, status, io) => {
                             content: `Bạn đã từ chối lời mời kết bạn từ ${friendship.requesterId.profile?.fullName || 'người dùng'}.`
                         }
                     );
+                }
+
+                const requesterSocketId = await redis.get(`socket:${friendship.requesterId._id}`);
+                if (requesterSocketId) {
+                    io.to(requesterSocketId).emit('friend_request_responded', {
+                        friendshipId: friendship._id,
+                        recipientId: userId,
+                        status: 'rejected'
+                    });
                 }
             } catch (e) {
                 console.error('Lỗi gửi thông báo từ chối kết bạn:', e.message);

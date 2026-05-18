@@ -35,13 +35,25 @@ const setOnline = async (userId, socketId, io) => {
 };
 
 
-const scheduleOffline = (userId, io, onDisconnectCallback) => {
+const scheduleOffline = (userId, disconnectedSocketId, io, onDisconnectCallback) => {
+    const entry = onlineUsers.get(userId);
+    // Nếu socket đang active khác với socket vừa disconnect, tức là có một connection MỚI đã thay thế.
+    if (entry && entry.socketId !== disconnectedSocketId) {
+        return;
+    }
+
     if (disconnectTimers.has(userId)) {
         clearTimeout(disconnectTimers.get(userId));
     }
 
     const timer = setTimeout(async () => {
         disconnectTimers.delete(userId);
+
+        // Kiểm tra lại lần nữa lúc thực thi (đề phòng có socket mới connect trong lúc chờ)
+        const currentEntry = onlineUsers.get(userId);
+        if (currentEntry && currentEntry.socketId !== disconnectedSocketId) {
+            return;
+        }
 
         // Thực sự đánh dấu offline
         await setOffline(userId, io);

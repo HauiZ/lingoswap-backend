@@ -36,7 +36,7 @@ io.on('connection', async (socket) => {
   presenceModule.initSockets(io, socket);
 
   socket.on('disconnect', async () => {
-    presenceService.scheduleOffline(userId, io, async () => {
+    presenceService.scheduleOffline(userId, socket.id, io, async () => {
     });
   });
 });

@@ -598,7 +598,13 @@ Lịch sử cuộc gọi và ghép cặp (Match Session History).
            "_id": "partner_id",
            "username": "user",
            "profile": { "fullName": "Nguyen B" }
-        }
+        },
+        "myReview": {
+           "_id": "review_id",
+           "rating": 5,
+           "comment": "Rất vui vẻ và thân thiện"
+        },
+        "partnerReview": null
       }
     ]
     ```
@@ -622,7 +628,13 @@ Lịch sử cuộc gọi và ghép cặp (Match Session History).
           "senderId": "nguoi_gui",
           "content": "Noi dung chat"
         }
-      ]
+      ],
+      "myReview": {
+         "_id": "review_id",
+         "rating": 5,
+         "comment": "Rất vui vẻ và thân thiện"
+      },
+      "partnerReview": null
     }
     ```
   - `400/500 Lỗi`: `{ "error": "Phiên gọi không tồn tại hoặc Không có quyền truy cập." }`
@@ -714,6 +726,8 @@ Danh sách các sự kiện Socket phục vụ ghép cặp ngẫu nhiên, gọi 
   - *Payload*: `{ "message": "Không tìm được đối tác..." }`
 - **`[ON]` match_found**: Ghép cặp hoặc cuộc gọi trực tiếp thành công!
   - *Payload*: `{ "sessionId": "id_phong", "partnerId": "id_đối_phương" }`
+- **`[ON]` partner_disconnected**: Nhận tín hiệu khi đối tác đã rời khỏi cuộc trò chuyện. Sử dụng để frontend ngắt WebRTC và đóng giao diện gọi ngay lập tức.
+  - *Payload*: `{ "message": "Đối tác đã rời cuộc trò chuyện." }`
 
 ### 8.2 Gọi thân thiết (Direct Intentional Matching)
 - **`[EMIT]` direct_match_request**: Yêu cầu gọi điện tới một người bạn.
@@ -799,6 +813,17 @@ Sử dụng chung các luồng sau cho WebRTC, truyền tải dữ liệu P2P tr
     }
     ```
   - *Lưu ý*: Server chỉ gửi cho bạn bè **đang online** (check RAM), không gửi cho user đang offline.
+
+### 8.8 Quản lý kết bạn (Friendship)
+- **`[ON]` friend_request_responded**: Nhận được phản hồi trực tiếp khi yêu cầu kết bạn của bạn được chấp nhận hoặc từ chối. Dùng để cập nhật giao diện (ẩn nút chờ xác nhận, cập nhật lại danh sách bạn bè) ngay lập tức.
+  - *Payload*:
+    ```json
+    {
+      "friendshipId": "id_friendship",
+      "recipientId": "id_người_xử_lý_yêu_cầu",
+      "status": "accepted" // hoặc "rejected"
+    }
+    ```
 
 ---
 

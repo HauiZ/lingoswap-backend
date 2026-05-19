@@ -86,6 +86,8 @@ export const completeMatchSessionService = async (sessionId, userId) => {
     const vnEndDate = new Date(session.endedAt.getTime() + 7 * 60 * 60 * 1000);
     const dateStr = vnEndDate.toISOString().split('T')[0];
 
+    let isStreakUpdated = false;
+
     if (session.durationSeconds > 0) {
         // update streak cho tất cả người tham gia
         const users = await User.find({ _id: { $in: session.participants } });
@@ -112,6 +114,11 @@ export const completeMatchSessionService = async (sessionId, userId) => {
 
                 p.stats.lastStreakUpdate = now;
                 await p.save();
+
+                // Xác định xem user đang thực hiện request có được cộng streak không
+                if (p._id.toString() === userId.toString()) {
+                    isStreakUpdated = true;
+                }
             }
         }
         // update totalSessions, totalHours và learningCalendar
@@ -143,7 +150,7 @@ export const completeMatchSessionService = async (sessionId, userId) => {
     }
     await User.findByIdAndUpdate(userId, { status: 'idle' });
 
-    return { session, partnerId };
+    return { session, partnerId, isStreakUpdated };
 };
 
 export const leaveMatchAndQueueService = async (userId, currentLanguage) => {

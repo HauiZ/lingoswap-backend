@@ -28,8 +28,8 @@ const endMatchSession = async (req, res) => {
     try {
         const userId = req.user.id;
         const { sessionId } = req.params;
-        const { session } = await completeMatchSessionService(sessionId, userId);
-        res.status(200).json({ message: "Kết thúc phiên gọi thành công", session });
+        const { session, isStreakUpdated } = await completeMatchSessionService(sessionId, userId);
+        res.status(200).json({ message: "Kết thúc phiên gọi thành công", session, isStreakUpdated });
     } catch (error) {
         res.status(error.statusCode || 500).json({ error: error.message || "Lỗi khi kết thúc phiên gọi" });
     }

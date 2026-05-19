@@ -697,6 +697,7 @@ Lịch sử cuộc gọi và ghép cặp (Match Session History).
     ```json
     {
       "message": "Kết thúc phiên gọi thành công",
+      "isStreakUpdated": true,
       "session": {
         "_id": "match_session_id",
         "status": "completed",

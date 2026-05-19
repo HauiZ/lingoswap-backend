@@ -323,6 +323,25 @@ const submitAppeal = async (userId, reason) => {
     return newAppeal;
 };
 
+const checkStreakStatus = async (userId) => {
+    const user = await User.findById(userId).select('stats.lastStreakUpdate');
+    if (!user) throw new ApiError(404, 'Tài khoản không tồn tại');
+    
+    // Hàm lấy chuỗi YYYY-MM-DD theo giờ Việt Nam (UTC+7)
+    const getVnDateStr = (date) => {
+        const d = new Date(date.getTime() + 7 * 60 * 60 * 1000);
+        return d.toISOString().split('T')[0];
+    };
+
+    const now = new Date();
+    const todayStr = getVnDateStr(now);
+    const lastUpdateStr = user.stats?.lastStreakUpdate ? getVnDateStr(user.stats.lastStreakUpdate) : null;
+
+    return {
+        isStreakUpdatedToday: lastUpdateStr === todayStr
+    };
+};
+
 export default {
     getUserById,
     getMyProfile,
@@ -331,5 +350,6 @@ export default {
     getUserDashboard,
     searchUsers,
     searchFriends,
-    submitAppeal
+    submitAppeal,
+    checkStreakStatus
 };

@@ -99,6 +99,17 @@ const submitAppeal = async (req, res) => {
   }
 };
 
+// Kiểm tra trạng thái cập nhật streak hôm nay
+const checkStreakStatus = async (req, res) => {
+  try {
+    const status = await userService.checkStreakStatus(req.user.id);
+    res.json(status);
+  } catch (error) {
+    logger.error(error.message);
+    res.status(error.statusCode || 500).json({ error: error.message || 'Lỗi khi kiểm tra streak' });
+  }
+};
+
 export {
   getUserById,
   getMyProfile,
@@ -107,5 +118,6 @@ export {
   getDashboard,
   searchUsers,
   searchFriends,
-  submitAppeal
+  submitAppeal,
+  checkStreakStatus
 };

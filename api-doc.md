@@ -159,8 +159,7 @@ Quản lý thông tin hồ sơ người dùng.
         "lastStreakUpdate": "2023-10-02T08:00:00.000Z",
         "totalHours": 12.5,
         "totalSessions": 20,
-        "learningCalendar": ["2023-10-01", "2023-10-02"],
-        "isStreakUpdatedToday": true
+        "learningCalendar": ["2023-10-01", "2023-10-02"]
       },
       "suggestedPartners": [
         {
@@ -174,7 +173,18 @@ Quản lý thông tin hồ sơ người dùng.
     }
     ```
 
-### 2.2 Tổng quan Dashboard User `🔒 Yêu cầu Token`
+### 2.2 Kiểm tra trạng thái Streak hôm nay `🔒 Yêu cầu Token`
+- **Method:** `GET`
+- **Endpoint:** `/api/users/me/streak-status`
+- **Responses:**
+  - `200 OK`:
+    ```json
+    {
+      "isStreakUpdatedToday": true
+    }
+    ```
+
+### 2.3 Tổng quan Dashboard User `🔒 Yêu cầu Token`
 - **Method:** `GET`
 - **Endpoint:** `/api/users/dashboard`
 - **Responses:**
@@ -200,7 +210,7 @@ Quản lý thông tin hồ sơ người dùng.
     }
     ```
 
-### 2.3 Tìm kiếm Người dùng `🔒 Yêu cầu Token`
+### 2.4 Tìm kiếm Người dùng `🔒 Yêu cầu Token`
 - **Method:** `GET`
 - **Endpoint:** `/api/users`
 - **Query Parameters:**
@@ -229,7 +239,7 @@ Quản lý thông tin hồ sơ người dùng.
     }
     ```
 
-### 2.4 Tìm kiếm Bạn bè (Theo tương tác) `🔒 Yêu cầu Token`
+### 2.5 Tìm kiếm Bạn bè (Theo tương tác) `🔒 Yêu cầu Token`
 - **Method:** `GET`
 - **Endpoint:** `/api/users/me/friends`
 - **Query Parameters:**
@@ -686,27 +696,6 @@ Lịch sử cuộc gọi và ghép cặp (Match Session History).
     ```
   - `400 Bad Request`: `{ "error": "Bạn đã đánh giá phiên gọi này rồi." }` hoặc `{ "error": "Đánh giá phải từ 1 đến 5 sao." }`
   - `403 Forbidden`: `{ "error": "Bạn không có quyền đánh giá phiên gọi này." }`
-  - `404 Not Found`: `{ "error": "Phiên gọi không tồn tại." }`
-
-### 6.4 Kết thúc một phiên gọi đang diễn ra `🔒 Yêu cầu Token`
-- **Method:** `PATCH`
-- **Endpoint:** `/api/user/matches/{sessionId}`
-- **Path Parameters:** `sessionId` = ID của phiên gọi.
-- **Responses:**
-  - `200 OK`:
-    ```json
-    {
-      "message": "Kết thúc phiên gọi thành công",
-      "isStreakUpdated": true,
-      "session": {
-        "_id": "match_session_id",
-        "status": "completed",
-        "durationSeconds": 145,
-        "endedAt": "2023-10-02T08:10:00.000Z"
-      }
-    }
-    ```
-  - `400 Bad Request`: `{ "error": "Phiên gọi đã kết thúc trước đó." }` hoặc `{ "error": "Bạn không thuộc phiên gọi này." }`
   - `404 Not Found`: `{ "error": "Phiên gọi không tồn tại." }`
 
 ---

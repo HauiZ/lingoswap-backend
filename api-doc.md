@@ -687,6 +687,27 @@ Lịch sử cuộc gọi và ghép cặp (Match Session History).
   - `400 Bad Request`: `{ "error": "Bạn đã đánh giá phiên gọi này rồi." }` hoặc `{ "error": "Đánh giá phải từ 1 đến 5 sao." }`
   - `403 Forbidden`: `{ "error": "Bạn không có quyền đánh giá phiên gọi này." }`
   - `404 Not Found`: `{ "error": "Phiên gọi không tồn tại." }`
+
+### 6.4 Kết thúc một phiên gọi đang diễn ra `🔒 Yêu cầu Token`
+- **Method:** `PATCH`
+- **Endpoint:** `/api/user/matches/{sessionId}`
+- **Path Parameters:** `sessionId` = ID của phiên gọi.
+- **Responses:**
+  - `200 OK`:
+    ```json
+    {
+      "message": "Kết thúc phiên gọi thành công",
+      "session": {
+        "_id": "match_session_id",
+        "status": "completed",
+        "durationSeconds": 145,
+        "endedAt": "2023-10-02T08:10:00.000Z"
+      }
+    }
+    ```
+  - `400 Bad Request`: `{ "error": "Phiên gọi đã kết thúc trước đó." }` hoặc `{ "error": "Bạn không thuộc phiên gọi này." }`
+  - `404 Not Found`: `{ "error": "Phiên gọi không tồn tại." }`
+
 ---
 
 ## 7. Notification APIs (`/api/user/notifications`)

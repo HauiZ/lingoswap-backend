@@ -46,17 +46,6 @@ const getMyProfile = async (userId) => {
         isOnline: true
     }));
 
-    // Kiểm tra xem hôm nay đã cập nhật streak chưa (theo giờ VN)
-    const getVnDateStr = (date) => {
-        const d = new Date(date.getTime() + 7 * 60 * 60 * 1000);
-        return d.toISOString().split('T')[0];
-    };
-    
-    let isStreakUpdatedToday = false;
-    if (user.stats?.lastStreakUpdate) {
-        isStreakUpdatedToday = getVnDateStr(user.stats.lastStreakUpdate) === getVnDateStr(now);
-    }
-
     const profileData = user.toJSON();
     return {
         ...profileData,
@@ -65,7 +54,6 @@ const getMyProfile = async (userId) => {
             ...profileData.stats,
             totalHours: parseFloat((profileData.stats?.totalHours || 0).toFixed(1)),
             learningCalendar: Array.from(learningCalendar),
-            isStreakUpdatedToday
         },
         suggestedPartners
     };
@@ -157,7 +145,7 @@ const searchUsers = async (userId, keyword, page = 1, limit = 10) => {
         status: 'accepted'
     }).select('requesterId recipientId');
 
-    const friendIds = friendships.map(f => 
+    const friendIds = friendships.map(f =>
         f.requesterId.toString() === userObjectId.toString() ? f.recipientId : f.requesterId
     );
 
@@ -225,7 +213,7 @@ const searchFriends = async (userId, keyword, page = 1, limit = 10) => {
         status: 'accepted'
     }).select('requesterId recipientId').lean();
 
-    const friendIds = friendships.map(f => 
+    const friendIds = friendships.map(f =>
         f.requesterId.toString() === userObjectId.toString() ? f.recipientId : f.requesterId
     );
 
@@ -275,10 +263,10 @@ const searchFriends = async (userId, keyword, page = 1, limit = 10) => {
     matchedUsers.sort((a, b) => {
         const timeA = interactMap[a._id.toString()] || 0;
         const timeB = interactMap[b._id.toString()] || 0;
-        
+
         // Nếu time bằng nhau thì sort theo ID để ổn định
         if (timeB === timeA) {
-             return a._id.toString().localeCompare(b._id.toString());
+            return a._id.toString().localeCompare(b._id.toString());
         }
         return timeB - timeA;
     });

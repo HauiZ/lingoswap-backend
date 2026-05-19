@@ -1,4 +1,5 @@
 import matchSessionService from './matchSession.service.js';
+import { completeMatchSessionService } from './match.service.js';
 
 const getMatchHistory = async (req, res) => {
     try {
@@ -23,6 +24,17 @@ const getMatchSessionDetails = async (req, res) => {
     }
 };
 
+const endMatchSession = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { sessionId } = req.params;
+        const { session } = await completeMatchSessionService(sessionId, userId);
+        res.status(200).json({ message: "Kết thúc phiên gọi thành công", session });
+    } catch (error) {
+        res.status(error.statusCode || 500).json({ error: error.message || "Lỗi khi kết thúc phiên gọi" });
+    }
+};
+
 const createReview = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -37,5 +49,6 @@ const createReview = async (req, res) => {
 export {
     getMatchHistory,
     getMatchSessionDetails,
+    endMatchSession,
     createReview
 };

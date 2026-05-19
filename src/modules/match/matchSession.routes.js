@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getMatchHistory, getMatchSessionDetails, createReview } from "./matchSession.controller.js";
+import { getMatchHistory, getMatchSessionDetails, endMatchSession, createReview } from "./matchSession.controller.js";
 import { authenticateToken } from '../../core/middlewares/auth.js';
 
 const router = Router();
@@ -37,6 +37,30 @@ router.get('/', authenticateToken, getMatchHistory);
  *         description: Thông tin chi tiết kèm lịch sử chat
  */
 router.get('/:sessionId', authenticateToken, getMatchSessionDetails);
+
+/**
+ * @swagger
+ * /api/user/matches/{sessionId}:
+ *   patch:
+ *     summary: Kết thúc một phiên gọi đang diễn ra
+ *     tags: [Matches]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: sessionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Kết thúc phiên gọi thành công
+ *       400:
+ *         description: Phiên gọi đã kết thúc hoặc không hợp lệ
+ *       404:
+ *         description: Phiên gọi không tồn tại
+ */
+router.patch('/:sessionId', authenticateToken, endMatchSession);
 
 /**
  * @swagger

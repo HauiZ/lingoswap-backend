@@ -66,6 +66,7 @@ export const leaveMatchAndQueueService = async (userId, currentLanguage) => {
     }
 
     let activeSession = await MatchSession.findOne({ participants: userId, status: 'ongoing' });
+    let updatedStreaks = [];
     if (activeSession) {
         activeSession.status = 'completed';
         activeSession.endedAt = new Date();
@@ -103,6 +104,7 @@ export const leaveMatchAndQueueService = async (userId, currentLanguage) => {
 
                     p.stats.lastStreakUpdate = now;
                     await p.save();
+                    updatedStreaks.push({ userId: p._id.toString(), streak: p.stats.streak });
                 }
             }
             // update totalSessions, totalHours và learningCalendar
@@ -137,7 +139,7 @@ export const leaveMatchAndQueueService = async (userId, currentLanguage) => {
     }
     await User.findByIdAndUpdate(userId, { status: 'idle' });
 
-    return { activeSession, partnerId };
+    return { activeSession, partnerId, updatedStreaks };
 };
 
 export const requestDirectMatchService = async (callerId, targetUserId) => {

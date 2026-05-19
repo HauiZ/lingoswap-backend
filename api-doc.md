@@ -173,18 +173,7 @@ Quản lý thông tin hồ sơ người dùng.
     }
     ```
 
-### 2.2 Kiểm tra trạng thái Streak hôm nay `🔒 Yêu cầu Token`
-- **Method:** `GET`
-- **Endpoint:** `/api/users/me/streak-status`
-- **Responses:**
-  - `200 OK`:
-    ```json
-    {
-      "isStreakUpdatedToday": true
-    }
-    ```
-
-### 2.3 Tổng quan Dashboard User `🔒 Yêu cầu Token`
+### 2.2 Tổng quan Dashboard User `🔒 Yêu cầu Token`
 - **Method:** `GET`
 - **Endpoint:** `/api/users/dashboard`
 - **Responses:**
@@ -210,7 +199,7 @@ Quản lý thông tin hồ sơ người dùng.
     }
     ```
 
-### 2.4 Tìm kiếm Người dùng `🔒 Yêu cầu Token`
+### 2.3 Tìm kiếm Người dùng `🔒 Yêu cầu Token`
 - **Method:** `GET`
 - **Endpoint:** `/api/users`
 - **Query Parameters:**
@@ -239,7 +228,7 @@ Quản lý thông tin hồ sơ người dùng.
     }
     ```
 
-### 2.5 Tìm kiếm Bạn bè (Theo tương tác) `🔒 Yêu cầu Token`
+### 2.4 Tìm kiếm Bạn bè (Theo tương tác) `🔒 Yêu cầu Token`
 - **Method:** `GET`
 - **Endpoint:** `/api/users/me/friends`
 - **Query Parameters:**
@@ -757,6 +746,8 @@ Danh sách các sự kiện Socket phục vụ ghép cặp ngẫu nhiên, gọi 
   - *Payload*: `{ "sessionId": "id_phong", "partnerId": "id_đối_phương" }`
 - **`[ON]` partner_disconnected**: Nhận tín hiệu khi đối tác đã rời khỏi cuộc trò chuyện. Sử dụng để frontend ngắt WebRTC và đóng giao diện gọi ngay lập tức.
   - *Payload*: `{ "message": "Đối tác đã rời cuộc trò chuyện." }`
+- **`[ON]` streak_update**: Nhận tín hiệu khi người dùng được cập nhật chuỗi học (streak) sau khi kết thúc một cuộc gọi. Frontend có thể dùng để trigger animation chúc mừng.
+  - *Payload*: `{ "streak": 5 }`
 
 ### 8.2 Gọi thân thiết (Direct Intentional Matching)
 - **`[EMIT]` direct_match_request**: Yêu cầu gọi điện tới một người bạn.

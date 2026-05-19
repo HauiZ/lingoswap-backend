@@ -1,32 +1,12 @@
 import express from 'express';
 const router = express.Router();
-import { getMyProfile, getUserById, updateMyProfile, uploadAvatar, getDashboard, searchUsers, searchFriends, submitAppeal, checkStreakStatus } from './user.controller.js';
+import { getMyProfile, getUserById, updateMyProfile, uploadAvatar, getDashboard, searchUsers, searchFriends, submitAppeal } from './user.controller.js';
 import { authenticateToken, verifyAppealToken } from '../../core/middlewares/auth.js';
 import { uploadImage } from '../../core/middlewares/upload.js';
 
 /**
  * @swagger
- * /api/users/me/streak-status:
- *   get:
- *     summary: Kiểm tra xem hôm nay đã cập nhật streak chưa
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Trạng thái cập nhật streak hôm nay
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 isStreakUpdatedToday:
- *                   type: boolean
- */
-router.get('/me/streak-status', authenticateToken, checkStreakStatus);
 
-/**
- * @swagger
  * /api/users/me:
  *   get:
  *     summary: Lấy hồ sơ cá nhân

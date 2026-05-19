@@ -91,7 +91,7 @@ export const handleMatchProvider = (io, socket) => {
 
         try {
             // 2. Delegate cleanup to Service Layer
-            const { partnerId } = await leaveMatchAndQueueService(userId, socket.currentLanguage);
+            const { partnerId, updatedStreaks } = await leaveMatchAndQueueService(userId, socket.currentLanguage);
 
             // 3. Broadcast disconnection to partner if they exist
             if (partnerId) {
@@ -100,6 +100,16 @@ export const handleMatchProvider = (io, socket) => {
                     io.to(partnerSocketId).emit('partner_disconnected', {
                         message: 'Đối tác đã rời cuộc trò chuyện.',
                     });
+                }
+            }
+
+            // 4. Broadcast streak update if any user got their streak updated
+            if (updatedStreaks && updatedStreaks.length > 0) {
+                for (const u of updatedStreaks) {
+                    const uSocketId = await redis.get(`socket:${u.userId}`);
+                    if (uSocketId) {
+                        io.to(uSocketId).emit('streak_update', { streak: u.streak });
+                    }
                 }
             }
             console.log(`[Leave] ${userId} đã rời hàng chờ`);

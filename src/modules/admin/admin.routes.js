@@ -1,6 +1,6 @@
 import express from 'express';
 const router = express.Router();
-import { getAllUsers, banUser, deleteUser, getReports, resolveReport, getDashboard, getAppeals, resolveAppeal } from './admin.controller.js';
+import { getAllUsers, banUser, deleteUser, getReports, resolveReport, getDashboard, getAppeals, resolveAppeal, addBlacklistKeyword, getBlacklistKeywords, deleteBlacklistKeyword } from './admin.controller.js';
 import { authenticateToken, authorizeRoles } from '../../core/middlewares/auth.js';
 
 router.use(authenticateToken, authorizeRoles('admin'));
@@ -183,5 +183,117 @@ router.get('/appeals', getAppeals);
  *         description: Xử lý kháng cáo thành công
  */
 router.patch('/appeals/:id/status', resolveAppeal);
+
+/**
+ * @swagger
+ * /api/admin/blacklist-keywords:
+ *   post:
+ *     summary: Thêm từ khóa bị cấm mới (Chỉ Admin)
+ *     tags: [Admin - Blacklist Keywords]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - keyword
+ *             properties:
+ *               keyword:
+ *                 type: string
+ *                 example: "quấy rối"
+ *     responses:
+ *       201:
+ *         description: Thêm từ khóa cấm thành công
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 keyword:
+ *                   type: object
+ *       400:
+ *         description: Lỗi đầu vào hoặc từ khóa đã tồn tại
+ */
+router.post('/blacklist-keywords', addBlacklistKeyword);
+
+/**
+ * @swagger
+ * /api/admin/blacklist-keywords:
+ *   get:
+ *     summary: Lấy danh sách toàn bộ từ khóa bị cấm (Chỉ Admin)
+ *     tags: [Admin - Blacklist Keywords]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Tìm kiếm từ khóa cấm
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Trang số
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *         description: Số lượng bản ghi mỗi trang
+ *     responses:
+ *       200:
+ *         description: Trả về danh sách từ khóa cấm phân trang
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 total:
+ *                   type: integer
+ *                 page:
+ *                   type: integer
+ *                 limit:
+ *                   type: integer
+ *                 keywords:
+ *                   type: array
+ */
+router.get('/blacklist-keywords', getBlacklistKeywords);
+
+/**
+ * @swagger
+ * /api/admin/blacklist-keywords/{id}:
+ *   delete:
+ *     summary: Xóa một từ khóa khỏi danh sách cấm (Chỉ Admin)
+ *     tags: [Admin - Blacklist Keywords]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID của từ khóa cấm cần xóa
+ *     responses:
+ *       200:
+ *         description: Xóa từ khóa cấm thành công
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *       404:
+ *         description: Không tìm thấy từ khóa cấm
+ */
+router.delete('/blacklist-keywords/:id', deleteBlacklistKeyword);
 
 export default router;

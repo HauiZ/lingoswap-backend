@@ -444,6 +444,72 @@ Dành riêng cho quản trị viên, yêu cầu `🔒 Admin Token`.
 - **Responses:**
   - `200 OK`: Cập nhật thành công. Nếu `approved`, tài khoản tự động được mở khóa và có email báo.
 
+### 3.7 Quản lý Danh sách từ khóa bị cấm (Blacklist Keywords) `🔒 Yêu cầu Quyền Admin`
+
+#### 3.7.1 Thêm từ khóa bị cấm mới
+- **Method:** `POST`
+- **Endpoint:** `/api/admin/blacklist-keywords`
+- **Request Body (JSON):**
+  ```json
+  {
+    "keyword": "quấy rối"
+  }
+  ```
+- **Responses:**
+  - `201 Created`:
+    ```json
+    {
+      "message": "Đã thêm từ khóa cấm thành công",
+      "keyword": {
+        "_id": "60d5ec...",
+        "keyword": "quấy rối",
+        "createdBy": "admin_id",
+        "isActive": true,
+        "createdAt": "...",
+        "updatedAt": "..."
+      }
+    }
+    ```
+  - `400 Bad Request`: `{ "error": "Từ khóa không được để trống" }` hoặc `{ "error": "Từ khóa này đã tồn tại trong danh sách cấm" }`
+
+#### 3.7.2 Lấy danh sách toàn bộ từ khóa bị cấm
+- **Method:** `GET`
+- **Endpoint:** `/api/admin/blacklist-keywords`
+- **Query Parameters (Tuỳ chọn):**
+  - `search`: Lọc tìm kiếm từ khóa.
+  - `page`: Số trang hiện tại (mặc định 1).
+  - `limit`: Số lượng kết quả mỗi trang (mặc định 20).
+- **Responses:**
+  - `200 OK`:
+    ```json
+    {
+      "total": 1,
+      "page": 1,
+      "limit": 20,
+      "keywords": [
+        {
+          "_id": "60d5ec...",
+          "keyword": "quấy rối",
+          "createdBy": {
+            "_id": "admin_id",
+            "profile": { "fullName": "Admin A" },
+            "email": "admin@example.com"
+          },
+          "isActive": true,
+          "createdAt": "..."
+        }
+      ]
+    }
+    ```
+
+#### 3.7.3 Xóa một từ khóa khỏi danh sách cấm
+- **Method:** `DELETE`
+- **Endpoint:** `/api/admin/blacklist-keywords/{id}`
+- **Path Parameters:** `id` = ID của từ khóa cấm cần xóa.
+- **Responses:**
+  - `200 OK`: `{ "message": "Đã xóa từ khóa cấm thành công" }`
+  - `404 Not Found`: `{ "error": "Từ khóa không tồn tại" }`
+
 ---
 
 ## 4. Conversation APIs (`/api/user/conversations`)
@@ -793,6 +859,8 @@ Sử dụng chung các luồng sau cho WebRTC, truyền tải dữ liệu P2P tr
       "conversationId": "..."
     }
     ```
+- **`[ON]` error**: Lỗi khi gửi tin nhắn thất bại (Ví dụ: Tin nhắn chứa từ khóa bị cấm từ admin).
+  - *Payload*: `"Tin nhắn chứa từ ngữ không phù hợp"` hoặc các thông điệp lỗi tương ứng.
 
 ### 8.5 Thông báo (Notifications)
 - **`[ON]` new_notification**: Nhận thông báo mới theo thời gian thực (realtime push).

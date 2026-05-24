@@ -1,7 +1,16 @@
 import Message from './Message.js';
 import Conversation from './Conversation.js';
+import adminService from '../admin/admin.service.js';
+import ApiError from '../../core/utils/ApiError.js';
 
 export const saveMessageService = async ({ senderId, partnerId, content, matchSessionId, type = 'text' }) => {
+    if (type === 'text') {
+        const checkResult = await adminService.checkContainsBlacklistKeyword(content);
+        if (checkResult.hasKeyword) {
+            throw new ApiError(400, 'Tin nhắn chứa từ ngữ không phù hợp');
+        }
+    }
+
     let query = { participants: { $all: [senderId, partnerId] } };
     if (matchSessionId) {
         query.matchSessionId = matchSessionId;

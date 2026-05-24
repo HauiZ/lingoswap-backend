@@ -2,8 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const emailTemplateFile = fileURLToPath(import.meta.url);
+const emailTemplateDir = path.dirname(emailTemplateFile);
 
 /**
  * Đọc file HTML template và thay thế các placeholder {{key}} bằng giá trị thực
@@ -12,7 +12,7 @@ const __dirname = path.dirname(__filename);
  * @returns {string} HTML string đã được render
  */
 const renderEmailTemplate = (templateName, variables = {}) => {
-    const templatePath = path.join(__dirname, '..', '..', '..', 'public', 'emails', `${templateName}.html`);
+    const templatePath = path.join(emailTemplateDir, '..', '..', '..', 'public', 'emails', `${templateName}.html`);
     let html = fs.readFileSync(templatePath, 'utf-8');
 
     for (const [key, value] of Object.entries(variables)) {

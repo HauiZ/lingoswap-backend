@@ -19,11 +19,24 @@ import env from './core/config/env.js';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const appFile = fileURLToPath(import.meta.url);
+const appDir = dirname(appFile);
 
 
 const app = express();
+
+// Request logging middleware
+app.use((req, res, next) => {
+  if (process.env.NODE_ENV === 'test') {
+    const methodColor = req.method === 'POST' ? '\x1b[32m' : // Green
+                        req.method === 'GET' ? '\x1b[36m' :  // Cyan
+                        req.method === 'PATCH' ? '\x1b[33m' : // Yellow
+                        req.method === 'DELETE' ? '\x1b[31m' : // Red
+                        '\x1b[0m'; // Reset
+    console.log(`\x1b[1m🚀 [API CALL]\x1b[0m ${methodColor}${req.method}\x1b[0m \x1b[4m${req.originalUrl}\x1b[0m`);
+  }
+  next();
+});
 
 // Middleware
 app.use(cors({
@@ -36,11 +49,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Static files
-app.use(express.static(path.join(__dirname, '../public')));
+app.use(express.static(path.join(appDir, '../public')));
 
 // View engine
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, '../views'));
+app.set('views', path.join(appDir, '../views'));
 
 // Swagger API Documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {

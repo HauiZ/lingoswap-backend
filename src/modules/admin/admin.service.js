@@ -13,6 +13,7 @@ import { validateEmail, validatePassword } from '../../core/utils/validators.js'
 import presenceService from '../presence/presence.service.js';
 import env from '../../core/config/env.js';
 import Appeal from '../users/Appeal.js';
+import BlacklistKeyword from './BlacklistKeyword.js';
 
 const getAllUsers = async () => {
     return await User.find().select('-password -__v').sort({ createdAt: -1 });
@@ -376,6 +377,69 @@ const resolveAppeal = async (appealId, adminId, payload) => {
     return appeal;
 };
 
+const addBlacklistKeyword = async (keywordText, adminId) => {
+    if (!keywordText || typeof keywordText !== 'string' || !keywordText.trim()) {
+        throw new ApiError(400, 'Từ khóa không được để trống');
+    }
+    const cleanKeyword = keywordText.trim().toLowerCase();
+    
+    const existing = await BlacklistKeyword.findOne({ keyword: cleanKeyword });
+    if (existing) {
+        throw new ApiError(400, 'Từ khóa này đã tồn tại trong danh sách cấm');
+    }
+
+    const newKeyword = await BlacklistKeyword.create({
+        keyword: cleanKeyword,
+        createdBy: adminId
+    });
+
+    return newKeyword;
+};
+
+const getBlacklistKeywords = async ({ search, page = 1, limit = 20 } = {}) => {
+    let query = {};
+    if (search) {
+        query.keyword = { $regex: search.trim().toLowerCase(), $options: 'i' };
+    }
+
+    const total = await BlacklistKeyword.countDocuments(query);
+    const keywords = await BlacklistKeyword.find(query)
+        .populate('createdBy', 'profile.fullName email username')
+        .sort({ createdAt: -1 })
+        .limit(limit * 1)
+        .skip((page - 1) * limit);
+
+    return {
+        total,
+        page: Number(page),
+        limit: Number(limit),
+        keywords
+    };
+};
+
+const deleteBlacklistKeyword = async (id) => {
+    const deleted = await BlacklistKeyword.findByIdAndDelete(id);
+    if (!deleted) {
+        throw new ApiError(404, 'Từ khóa không tồn tại');
+    }
+    return deleted;
+};
+
+const checkContainsBlacklistKeyword = async (text) => {
+    if (!text || typeof text !== 'string') return { hasKeyword: false };
+    const cleanText = text.toLowerCase();
+
+    const keywords = await BlacklistKeyword.find({ isActive: true }).select('keyword');
+
+    for (const item of keywords) {
+        if (cleanText.includes(item.keyword)) {
+            return { hasKeyword: true, matchedKeyword: item.keyword };
+        }
+    }
+
+    return { hasKeyword: false };
+};
+
 export default {
     getAllUsers,
     banUser,
@@ -385,5 +449,9 @@ export default {
     getDashboardStats,
     createAdmin,
     getAllAppeals,
-    resolveAppeal
+    resolveAppeal,
+    addBlacklistKeyword,
+    getBlacklistKeywords,
+    deleteBlacklistKeyword,
+    checkContainsBlacklistKeyword
 };

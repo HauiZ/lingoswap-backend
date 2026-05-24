@@ -118,6 +118,46 @@ const resolveAppeal = async (req, res) => {
   }
 };
 
+// Thêm từ khóa bị cấm
+const addBlacklistKeyword = async (req, res) => {
+  try {
+    const { keyword } = req.body;
+    const adminId = req.user.id;
+    const result = await adminService.addBlacklistKeyword(keyword, adminId);
+    logger.log(`Admin ${adminId} đã thêm từ khóa cấm: ${keyword}`);
+    res.status(201).json({ message: 'Đã thêm từ khóa cấm thành công', keyword: result });
+  } catch (error) {
+    logger.error(error.message);
+    res.status(error.statusCode || 500).json({ error: error.message || 'Lỗi khi thêm từ khóa cấm' });
+  }
+};
+
+// Lấy danh sách từ khóa bị cấm (hỗ trợ phân trang & tìm kiếm)
+const getBlacklistKeywords = async (req, res) => {
+  try {
+    const { search, page, limit } = req.query;
+    const result = await adminService.getBlacklistKeywords({ search, page, limit });
+    logger.log('Admin lấy danh sách từ khóa cấm');
+    res.json(result);
+  } catch (error) {
+    logger.error(error.message);
+    res.status(error.statusCode || 500).json({ error: error.message || 'Lỗi khi lấy danh sách từ khóa cấm' });
+  }
+};
+
+// Xóa từ khóa cấm
+const deleteBlacklistKeyword = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await adminService.deleteBlacklistKeyword(id);
+    logger.log(`Admin đã xóa từ khóa cấm ID: ${id}`);
+    res.json({ message: 'Đã xóa từ khóa cấm thành công' });
+  } catch (error) {
+    logger.error(error.message);
+    res.status(error.statusCode || 500).json({ error: error.message || 'Lỗi khi xóa từ khóa cấm' });
+  }
+};
+
 export {
   getAllUsers,
   banUser,
@@ -127,5 +167,8 @@ export {
   getDashboard,
   createAdmin,
   getAppeals,
-  resolveAppeal
+  resolveAppeal,
+  addBlacklistKeyword,
+  getBlacklistKeywords,
+  deleteBlacklistKeyword
 };

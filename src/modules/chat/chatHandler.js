@@ -27,7 +27,8 @@ export const handleChatProvider = (io, socket) => {
 
         } catch (error) {
             console.error("Lỗi gửi tin nhắn (Lazy Create):", error);
-            socket.emit('error', 'Không thể gửi tin nhắn');
+            const errMsg = error.statusCode === 400 ? error.message : 'Không thể gửi tin nhắn';
+            socket.emit('error', errMsg);
         }
     });
 };

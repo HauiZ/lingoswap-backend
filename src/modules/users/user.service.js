@@ -8,17 +8,40 @@ import mongoose from 'mongoose';
 import Friendship from '../friends/Friendship.js';
 import Conversation from '../chat/Conversation.js';
 
+const checkAndResetStreak = async (user) => {
+    if (!user || !user.stats || user.stats.streak === 0) return user;
+
+    const now = new Date();
+    const getVnDateStr = (date) => {
+        const d = new Date(date.getTime() + 7 * 60 * 60 * 1000);
+        return d.toISOString().split('T')[0];
+    };
+
+    const lastUpdateStr = user.stats.lastStreakUpdate ? getVnDateStr(user.stats.lastStreakUpdate) : null;
+    const todayStr = getVnDateStr(now);
+    const yesterdayStr = getVnDateStr(new Date(now.getTime() - 24 * 60 * 60 * 1000));
+
+    if (lastUpdateStr && lastUpdateStr !== todayStr && lastUpdateStr !== yesterdayStr) {
+        user.stats.streak = 0;
+        await user.save();
+    }
+    return user;
+};
+
 const getUserById = async (id) => {
     const user = await User.findById(id).select('-password -__v -settings -status');
     if (!user) {
         throw new ApiError(404, 'Người dùng không tồn tại');
     }
+    await checkAndResetStreak(user);
     return user;
 };
 
 const getMyProfile = async (userId) => {
     const user = await User.findById(userId).select('-password -__v');
     if (!user) throw new ApiError(404, 'Tài khoản không tồn tại');
+
+    await checkAndResetStreak(user);
 
     const now = new Date();
 
@@ -96,6 +119,8 @@ const uploadAvatar = async (userId, file) => {
 const getUserDashboard = async (userId) => {
     const user = await User.findById(userId).select('profile stats');
     if (!user) throw new ApiError(404, 'Tài khoản không tồn tại');
+
+    await checkAndResetStreak(user);
 
     // 1. Lấy thống kê số phiên và tổng thời gian từ cache của User (O(1))
     const totalSessions = user.stats?.totalSessions || 0;

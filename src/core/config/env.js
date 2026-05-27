@@ -21,6 +21,8 @@ export const env = {
   OAUTH_CLIENT_ID: process.env.OAUTH_CLIENT_ID,
   OAUTH_CLIENT_SECRET: process.env.OAUTH_CLIENT_SECRET,
   OAUTH_REFRESH_TOKEN: process.env.OAUTH_REFRESH_TOKEN,
+  MAILTRAP_USER: process.env.MAILTRAP_USER,
+  MAILTRAP_PASS: process.env.MAILTRAP_PASS,
 };
 
 export default env;

@@ -11,7 +11,7 @@ import { generateAccessToken } from '../../core/utils/generateToken.js';
 import { OAuth2Client } from 'google-auth-library';
 import axios from 'axios';
 
-const googleClient = new OAuth2Client(env.GOOGLE_CLIENT_ID);
+const googleClient = new OAuth2Client(env.OAUTH_CLIENT_ID);
 
 const register = async ({ email, password, confirmPassword, fullName, country }) => {
     if (!email || !password || !confirmPassword || !fullName || !country) {
@@ -214,7 +214,7 @@ const googleLogin = async ({ idToken, accessToken }) => {
         try {
             const ticket = await googleClient.verifyIdToken({
                 idToken,
-                audience: env.GOOGLE_CLIENT_ID,
+                audience: env.OAUTH_CLIENT_ID,
             });
             payload = ticket.getPayload();
         } catch (error) {

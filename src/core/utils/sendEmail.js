@@ -5,13 +5,16 @@ const sendEmail = async (options) => {
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
+      type: 'OAuth2',
       user: env.MY_EMAIL_ACCOUNT,
-      pass: env.MY_EMAIL_APP_PASSWORD,
+      clientId: env.OAUTH_CLIENT_ID,
+      clientSecret: env.OAUTH_CLIENT_SECRET,
+      refreshToken: env.OAUTH_REFRESH_TOKEN,
     },
   });
 
   const mailOptions = {
-    from: 'LingoSwap <noreply@lingoswap.com>',
+    from: `LingoSwap <${env.MY_EMAIL_ACCOUNT}>`,
     to: options.email,
     subject: options.subject,
     text: options.message,

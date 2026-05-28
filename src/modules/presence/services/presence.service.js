@@ -190,6 +190,19 @@ const getOnlineFriendIds = async (userId) => {
 
 const getOnlineCount = () => onlineUsers.size;
 
+const forceDisconnect = async (userId, io) => {
+    if (!io) return;
+    const socketId = await getSocketId(userId);
+    if (socketId) {
+        io.to(socketId).emit('banned', { message: 'Tài khoản của bạn đã bị khóa.' });
+        const socket = io.sockets.sockets.get(socketId);
+        if (socket) {
+            socket.disconnect(true);
+        }
+        await setOffline(userId, io);
+    }
+};
+
 export default {
     setOnline,
     setOffline,
@@ -200,5 +213,6 @@ export default {
     getSocketId,
     startTimeoutChecker,
     getOnlineFriendIds,
-    getOnlineCount
+    getOnlineCount,
+    forceDisconnect
 };

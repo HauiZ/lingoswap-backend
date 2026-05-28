@@ -19,7 +19,7 @@ const getAllUsers = async () => {
     return await User.find().select('-password -__v').sort({ createdAt: -1 });
 };
 
-const banUser = async (id) => {
+const banUser = async (id, io) => {
     const user = await User.findById(id);
     if (!user) {
         throw new ApiError(404, 'Người dùng không tồn tại');
@@ -27,6 +27,11 @@ const banUser = async (id) => {
     user.statusAccount = 'banned';
     user.bannedUntil = null;
     await user.save();
+
+    await redis.set(`blacklist:banned:${user._id}`, '1', 'EX', 7 * 24 * 60 * 60);
+    if (io) {
+        await presenceService.forceDisconnect(user._id.toString(), io);
+    }
 
     try {
         const appealToken = jwt.sign({ id: user._id, type: 'appeal' }, env.JWT_SECRET, { expiresIn: '7d' });
@@ -73,7 +78,7 @@ const getAllReports = async (statusFilter, limit = 20, page = 1) => {
         .skip((page - 1) * limit);
 };
 
-const resolveReport = async (reportId, adminId, payload) => {
+const resolveReport = async (reportId, adminId, payload, io) => {
     const { status, adminNotes, banDuration } = payload;
     
     const report = await Report.findById(reportId);
@@ -101,6 +106,11 @@ const resolveReport = async (reportId, adminId, payload) => {
                 reportedUser.bannedUntil = null; // vĩnh viễn (kết hợp statusAccount = banned)
             }
             await reportedUser.save();
+
+            await redis.set(`blacklist:banned:${reportedUser._id}`, '1', 'EX', 7 * 24 * 60 * 60);
+            if (io) {
+                await presenceService.forceDisconnect(reportedUser._id.toString(), io);
+            }
 
             // Gửi email thông báo
             try {
@@ -335,6 +345,7 @@ const resolveAppeal = async (appealId, adminId, payload) => {
             user.statusAccount = 'active';
             user.bannedUntil = null;
             await user.save();
+            await redis.del(`blacklist:banned:${user._id}`);
 
             // Gửi email thông báo mở khoá
             try {

@@ -2,6 +2,7 @@ import User from '../entities/User.js';
 import sendEmail from '../../../core/utils/sendEmail.js';
 import renderEmailTemplate from '../../../core/utils/emailTemplate.js';
 import env from '../../../core/config/env.js';
+import redis from '../../../core/config/redis.js';
 
 export const startUnbanWorker = () => {
     setInterval(async () => {
@@ -19,6 +20,7 @@ export const startUnbanWorker = () => {
                 user.statusAccount = 'active';
                 user.bannedUntil = null;
                 await user.save();
+                await redis.del(`blacklist:banned:${user._id.toString()}`);
                 try {
                     const html = renderEmailTemplate('unbanned', {
                         fullName: user.profile.fullName,

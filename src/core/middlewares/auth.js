@@ -1,7 +1,8 @@
 import jwt from 'jsonwebtoken';
 import env from '../config/env.js';
+import redis from '../config/redis.js';
 
-const authenticateToken = (req, res, next) => {
+const authenticateToken = async (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
@@ -9,16 +10,26 @@ const authenticateToken = (req, res, next) => {
     return res.status(401).json({ error: 'Token không tồn tại' });
   }
 
-  jwt.verify(token, env.JWT_SECRET, (err, user) => {
-    if (err) {
-      return res.status(403).json({ error: 'Token không hợp lệ' });
-    }
-    if (user.statusAccount === 'banned') {
+  try {
+    const user = jwt.verify(token, env.JWT_SECRET);
+    
+    // Kiểm tra Redis Blacklist xem user có bị ban không
+    const isBanned = await redis.get(`blacklist:banned:${user.id}`);
+    if (isBanned || user.statusAccount === 'banned') {
       return res.status(403).json({ error: 'Tài khoản đã bị khóa' });
     }
+
     req.user = user;
     next();
-  });
+  } catch (err) {
+    // Nếu token hết hạn hoặc không hợp lệ, jwt.verify sẽ văng lỗi vào đây
+    if (err.name === 'TokenExpiredError' || err.name === 'JsonWebTokenError') {
+      return res.status(403).json({ error: 'Token không hợp lệ hoặc đã hết hạn' });
+    }
+    // Lỗi từ Redis hoặc lỗi hệ thống khác
+    console.error('Lỗi xác thực:', err);
+    return res.status(500).json({ error: 'Lỗi xác thực hệ thống' });
+  }
 };
 
 const authorizeRoles = (...roles) => {

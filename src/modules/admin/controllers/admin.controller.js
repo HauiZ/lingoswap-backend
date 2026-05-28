@@ -17,7 +17,8 @@ const getAllUsers = async (req, res) => {
 const banUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await adminService.banUser(id);
+    const io = req.app.get('io');
+    const user = await adminService.banUser(id, io);
     logger.log(`Admin đã khóa (ban) user ID: ${id}`);
     res.json({ message: 'Đã khóa tài khoản người dùng do vi phạm', user });
   } catch (error) {
@@ -55,7 +56,8 @@ const resolveReport = async (req, res) => {
   try {
     const { id } = req.params;
     const adminId = req.user.id;
-    const report = await adminService.resolveReport(id, adminId, req.body);
+    const io = req.app.get('io');
+    const report = await adminService.resolveReport(id, adminId, req.body, io);
     logger.log(`Admin ${adminId} đã xử lý báo cáo ID: ${id}`);
     res.json({ message: 'Đã cập nhật trạng thái báo cáo', report });
   } catch (error) {

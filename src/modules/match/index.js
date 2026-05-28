@@ -1,4 +1,4 @@
-import { handleMatchProvider } from './matchHandler.js';
+import { handleMatchProvider } from './controllers/matchHandler.js';
 
 export default {
     initSockets: (io, socket) => {

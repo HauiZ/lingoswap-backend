@@ -1,7 +1,7 @@
 // tests/integration/auth_flow.test.js
 import request from 'supertest';
 import * as dbHandler from '../dbHandler.js';
-import OTP from '../../src/modules/auth/OTP.js';
+import OTP from '../../src/modules/auth/entities/OTP.js';
 
 // 1. Chặn app.js tự kết nối database thật bằng cách mock connectDB
 jest.mock('../../src/core/config/database.js', () => {

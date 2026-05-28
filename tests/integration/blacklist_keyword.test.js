@@ -1,9 +1,9 @@
 // tests/integration/blacklist_keyword.test.js
 import request from 'supertest';
 import * as dbHandler from '../dbHandler.js';
-import User from '../../src/modules/users/User.js';
-import BlacklistKeyword from '../../src/modules/admin/BlacklistKeyword.js';
-import * as chatService from '../../src/modules/chat/chat.service.js';
+import User from '../../src/modules/users/entities/User.js';
+import BlacklistKeyword from '../../src/modules/admin/entities/BlacklistKeyword.js';
+import * as chatService from '../../src/modules/chat/services/chat.service.js';
 
 // Mock DB connection và Redis
 jest.mock('../../src/core/config/database.js', () => {

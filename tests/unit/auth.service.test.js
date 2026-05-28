@@ -1,8 +1,8 @@
 // tests/unit/auth.service.test.js
 import * as dbHandler from '../dbHandler.js';
-import authService from '../../src/modules/auth/auth.service.js';
-import User from '../../src/modules/users/User.js';
-import OTP from '../../src/modules/auth/OTP.js';
+import authService from '../../src/modules/auth/services/auth.service.js';
+import User from '../../src/modules/users/entities/User.js';
+import OTP from '../../src/modules/auth/entities/OTP.js';
 import jwt from 'jsonwebtoken';
 import env from '../../src/core/config/env.js';
 

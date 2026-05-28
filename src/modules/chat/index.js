@@ -1,4 +1,4 @@
-import { handleChatProvider } from './chatHandler.js';
+import { handleChatProvider } from './controllers/chatHandler.js';
 
 export default {
     initSockets: (io, socket) => {

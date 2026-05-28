@@ -1,9 +1,9 @@
 // tests/unit/match.service.test.js
 import * as dbHandler from '../dbHandler.js';
-import * as matchService from '../../src/modules/match/match.service.js';
-import authService from '../../src/modules/auth/auth.service.js';
-import User from '../../src/modules/users/User.js';
-import MatchSession from '../../src/modules/match/MatchSession.js';
+import * as matchService from '../../src/modules/match/services/match.service.js';
+import authService from '../../src/modules/auth/services/auth.service.js';
+import User from '../../src/modules/users/entities/User.js';
+import MatchSession from '../../src/modules/match/entities/MatchSession.js';
 import { listStore } from '../__mocks__/ioredis.js';
 import redis from '../../src/core/config/redis.js';
 

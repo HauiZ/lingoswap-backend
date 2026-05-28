@@ -1,12 +1,12 @@
 // tests/unit/report.service.test.js
 import * as dbHandler from '../dbHandler.js';
-import reportService from '../../src/modules/reports/report.service.js';
-import User from '../../src/modules/users/User.js';
-import Report from '../../src/modules/reports/Report.js';
-import notificationService from '../../src/modules/notifications/notification.service.js';
+import reportService from '../../src/modules/reports/services/report.service.js';
+import User from '../../src/modules/users/entities/User.js';
+import Report from '../../src/modules/reports/entities/Report.js';
+import notificationService from '../../src/modules/notifications/services/notification.service.js';
 
 jest.mock('ioredis');
-jest.mock('../../src/modules/notifications/notification.service.js', () => ({
+jest.mock('../../src/modules/notifications/services/notification.service.js', () => ({
   notifyAllAdmins: jest.fn().mockResolvedValue([])
 }));
 

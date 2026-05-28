@@ -1,8 +1,8 @@
 // tests/integration/reports_notifications.test.js
 import request from 'supertest';
 import * as dbHandler from '../dbHandler.js';
-import User from '../../src/modules/users/User.js';
-import Notification from '../../src/modules/notifications/Notification.js';
+import User from '../../src/modules/users/entities/User.js';
+import Notification from '../../src/modules/notifications/entities/Notification.js';
 
 // Mock DB connection và Redis
 jest.mock('../../src/core/config/database.js', () => {

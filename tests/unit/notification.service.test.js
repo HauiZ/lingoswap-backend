@@ -1,8 +1,8 @@
 // tests/unit/notification.service.test.js
 import * as dbHandler from '../dbHandler.js';
-import notificationService from '../../src/modules/notifications/notification.service.js';
-import Notification from '../../src/modules/notifications/Notification.js';
-import User from '../../src/modules/users/User.js';
+import notificationService from '../../src/modules/notifications/services/notification.service.js';
+import Notification from '../../src/modules/notifications/entities/Notification.js';
+import User from '../../src/modules/users/entities/User.js';
 import redis from '../../src/core/config/redis.js';
 
 jest.mock('ioredis');

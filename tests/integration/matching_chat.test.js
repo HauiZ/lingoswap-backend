@@ -1,9 +1,9 @@
 // tests/integration/matching_chat.test.js
 import request from 'supertest';
 import * as dbHandler from '../dbHandler.js';
-import * as matchService from '../../src/modules/match/match.service.js';
-import * as chatService from '../../src/modules/chat/chat.service.js';
-import MatchSession from '../../src/modules/match/MatchSession.js';
+import * as matchService from '../../src/modules/match/services/match.service.js';
+import * as chatService from '../../src/modules/chat/services/chat.service.js';
+import MatchSession from '../../src/modules/match/entities/MatchSession.js';
 
 // Mock DB connection, Redis và Multer Image Chat
 jest.mock('../../src/core/config/database.js', () => {

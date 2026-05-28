@@ -1,12 +1,12 @@
 // tests/unit/user.service.test.js
 import * as dbHandler from '../dbHandler.js';
-import userService from '../../src/modules/users/user.service.js';
-import authService from '../../src/modules/auth/auth.service.js';
-import User from '../../src/modules/users/User.js';
-import Appeal from '../../src/modules/users/Appeal.js';
-import Friendship from '../../src/modules/friends/Friendship.js';
-import Conversation from '../../src/modules/chat/Conversation.js';
-import presenceService from '../../src/modules/presence/presence.service.js';
+import userService from '../../src/modules/users/services/user.service.js';
+import authService from '../../src/modules/auth/services/auth.service.js';
+import User from '../../src/modules/users/entities/User.js';
+import Appeal from '../../src/modules/users/entities/Appeal.js';
+import Friendship from '../../src/modules/friends/entities/Friendship.js';
+import Conversation from '../../src/modules/chat/entities/Conversation.js';
+import presenceService from '../../src/modules/presence/services/presence.service.js';
 
 jest.mock('ioredis');
 

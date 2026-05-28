@@ -6,9 +6,9 @@ import chatModule from './src/modules/chat/index.js';
 import presenceModule from './src/modules/presence/index.js';
 import { socketAuth } from './src/core/middlewares/socketAuth.js';
 import env from './src/core/config/env.js';
-import presenceService from './src/modules/presence/presence.service.js';
-import { startLastOnlineWorker } from './src/modules/presence/syncLastOnline.js';
-import { startUnbanWorker } from './src/modules/users/unbanWorker.js';
+import presenceService from './src/modules/presence/services/presence.service.js';
+import { startLastOnlineWorker } from './src/modules/presence/workers/syncLastOnline.js';
+import { startUnbanWorker } from './src/modules/users/workers/unbanWorker.js';
 
 const PORT = env.PORT || 5000;
 

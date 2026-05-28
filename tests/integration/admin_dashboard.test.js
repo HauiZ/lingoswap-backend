@@ -1,8 +1,8 @@
 // tests/integration/admin_dashboard.test.js
 import request from 'supertest';
 import * as dbHandler from '../dbHandler.js';
-import User from '../../src/modules/users/User.js';
-import Appeal from '../../src/modules/users/Appeal.js';
+import User from '../../src/modules/users/entities/User.js';
+import Appeal from '../../src/modules/users/entities/Appeal.js';
 
 // Mock DB connection và Redis
 jest.mock('../../src/core/config/database.js', () => {

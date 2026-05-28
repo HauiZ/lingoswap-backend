@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import env from '../config/env.js';
-import User from '../../modules/users/User.js';
+import User from '../../modules/users/entities/User.js';
 
 export const socketAuth = async (socket, next) => {
     try {

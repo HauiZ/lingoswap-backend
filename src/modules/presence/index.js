@@ -1,4 +1,4 @@
-import { handlePresenceProvider } from './presenceHandler.js';
+import { handlePresenceProvider } from './controllers/presenceHandler.js';
 
 export default {
     initSockets: (io, socket) => {

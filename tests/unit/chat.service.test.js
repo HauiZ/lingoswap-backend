@@ -1,9 +1,9 @@
 // tests/unit/chat.service.test.js
 import * as dbHandler from '../dbHandler.js';
-import * as chatService from '../../src/modules/chat/chat.service.js';
-import authService from '../../src/modules/auth/auth.service.js';
-import Conversation from '../../src/modules/chat/Conversation.js';
-import Message from '../../src/modules/chat/Message.js';
+import * as chatService from '../../src/modules/chat/services/chat.service.js';
+import authService from '../../src/modules/auth/services/auth.service.js';
+import Conversation from '../../src/modules/chat/entities/Conversation.js';
+import Message from '../../src/modules/chat/entities/Message.js';
 
 jest.mock('ioredis');
 

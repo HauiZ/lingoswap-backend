@@ -1,11 +1,11 @@
 // tests/unit/friend.service.test.js
 import * as dbHandler from '../dbHandler.js';
-import friendService from '../../src/modules/friends/friend.service.js';
-import authService from '../../src/modules/auth/auth.service.js';
-import Friendship from '../../src/modules/friends/Friendship.js';
+import friendService from '../../src/modules/friends/services/friend.service.js';
+import authService from '../../src/modules/auth/services/auth.service.js';
+import Friendship from '../../src/modules/friends/entities/Friendship.js';
 
 jest.mock('ioredis');
-jest.mock('../../src/modules/notifications/notification.service.js', () => ({
+jest.mock('../../src/modules/notifications/services/notification.service.js', () => ({
   createAndPush: jest.fn().mockResolvedValue(true),
   updateNotificationContent: jest.fn().mockResolvedValue(true)
 }));

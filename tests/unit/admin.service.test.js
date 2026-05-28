@@ -1,10 +1,10 @@
 // tests/unit/admin.service.test.js
 import * as dbHandler from '../dbHandler.js';
-import adminService from '../../src/modules/admin/admin.service.js';
-import User from '../../src/modules/users/User.js';
-import Report from '../../src/modules/reports/Report.js';
-import Appeal from '../../src/modules/users/Appeal.js';
-import MatchSession from '../../src/modules/match/MatchSession.js';
+import adminService from '../../src/modules/admin/services/admin.service.js';
+import User from '../../src/modules/users/entities/User.js';
+import Report from '../../src/modules/reports/entities/Report.js';
+import Appeal from '../../src/modules/users/entities/Appeal.js';
+import MatchSession from '../../src/modules/match/entities/MatchSession.js';
 
 // Mock các dịch vụ ngoài
 jest.mock('ioredis');

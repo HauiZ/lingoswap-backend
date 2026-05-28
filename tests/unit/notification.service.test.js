@@ -135,5 +135,13 @@ describe('Unit Test: Notification Service', () => {
       expect(dbNotif1.isRead).toBe(true);
       expect(dbNotif2.isRead).toBe(true);
     });
+
+    test('BE82: Nên chặn/không cập nhật thông báo khi người dùng khác cố ý đánh dấu đã đọc', async () => {
+      const res = await notificationService.markAsRead(sender._id, notif1._id);
+      expect(res).toBeNull();
+
+      const dbNotif1 = await Notification.findById(notif1._id);
+      expect(dbNotif1.isRead).toBe(false);
+    });
   });
 });

@@ -10,6 +10,7 @@ import { validatePassword, validateEmail } from '../../../core/utils/validators.
 import { generateAccessToken } from '../../../core/utils/generateToken.js';
 import { OAuth2Client } from 'google-auth-library';
 import axios from 'axios';
+import redis from '../../../core/config/redis.js';
 
 const googleClient = new OAuth2Client(env.OAUTH_CLIENT_ID);
 
@@ -124,6 +125,20 @@ const forgotPassword = async ({ email }) => {
 
     if (!user) {
         throw new ApiError(404, 'Không tìm thấy người dùng có email này');
+    }
+
+    // Rate Limiter: tối đa 3 lần / 5 phút per email
+    const emailKey = `otp_limit:${email.toLowerCase()}`;
+    const requestCount = await redis.get(emailKey);
+
+    if (requestCount) {
+        const count = parseInt(requestCount, 10);
+        if (count >= 3) {
+            throw new ApiError(429, 'Bạn đã yêu cầu gửi OTP quá nhiều lần. Vui lòng thử lại sau.');
+        }
+        await redis.incr(emailKey);
+    } else {
+        await redis.set(emailKey, 1, 'EX', 300); // 5 phút (300 giây)
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();

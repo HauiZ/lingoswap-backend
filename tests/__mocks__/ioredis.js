@@ -34,6 +34,16 @@ class RedisMock extends EventEmitter {
     return 0;
   }
 
+  async sadd(key, value) {
+    return 1;
+  }
+
+  async incr(key) {
+    const val = redisStore[key] ? parseInt(redisStore[key], 10) : 0;
+    redisStore[key] = String(val + 1);
+    return val + 1;
+  }
+
   // Giả lập RPUSH
   async rpush(key, value) {
     if (!listStore[key]) {

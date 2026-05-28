@@ -5,6 +5,7 @@ import User from '../../src/modules/users/entities/User.js';
 import OTP from '../../src/modules/auth/entities/OTP.js';
 import jwt from 'jsonwebtoken';
 import env from '../../src/core/config/env.js';
+import { redisStore } from '../__mocks__/ioredis.js';
 
 // Mock các dịch vụ ngoài
 jest.mock('ioredis');
@@ -14,7 +15,12 @@ jest.mock('../../src/core/utils/sendEmail.js', () => {
 
 describe('Unit Test: Auth Service', () => {
   beforeAll(async () => await dbHandler.connect());
-  afterEach(async () => await dbHandler.clear());
+  afterEach(async () => {
+    await dbHandler.clear();
+    for (const key in redisStore) {
+      delete redisStore[key];
+    }
+  });
   afterAll(async () => await dbHandler.close());
 
   const mockUserPayload = {
@@ -264,6 +270,18 @@ describe('Unit Test: Auth Service', () => {
           newPassword: 'AnotherPassword123!'
         })
       ).rejects.toThrow('Mã OTP không hợp lệ hoặc đã hết hạn');
+    });
+
+    test('BE96: Nên báo lỗi 429 khi gửi OTP khôi phục mật khẩu quá 3 lần trong vòng 5 phút (OTP Rate Limit)', async () => {
+      // Gửi lần 1, 2, 3 thành công
+      await authService.forgotPassword({ email: mockUserPayload.email });
+      await authService.forgotPassword({ email: mockUserPayload.email });
+      await authService.forgotPassword({ email: mockUserPayload.email });
+
+      // Gửi lần 4 -> Phải ném lỗi 429
+      await expect(
+        authService.forgotPassword({ email: mockUserPayload.email })
+      ).rejects.toThrow('Bạn đã yêu cầu gửi OTP quá nhiều lần. Vui lòng thử lại sau.');
     });
   });
 });

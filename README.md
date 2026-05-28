@@ -97,13 +97,25 @@ LingoSwap Backend cung cấp 2 phương thức để tra cứu API:
 
 ```text
 lingoswap-backend/
-├── public/                 # File tĩnh và Email Templates
+├── public/                 # Tài sản tĩnh (ảnh, CSS) và email templates
+├── views/                  # Các giao diện hiển thị EJS (reset password, v.v.)
+├── tests/                  # Bộ kiểm thử tự động (Unit và Integration tests)
+│   ├── unit/               # Thư mục chứa Unit Tests của các dịch vụ nghiệp vụ
+│   ├── integration/        # Thư mục chứa Integration Tests của các luồng API
+│   └── dbHandler.js        # Tiện ích khởi tạo cơ sở dữ liệu giả lập cho kiểm thử
 ├── src/
 │   ├── core/               # Các thành phần cốt lõi và dùng chung
 │   │   ├── config/         # Cấu hình Database, Redis, Môi trường
 │   │   ├── middlewares/    # Middleware chung (Auth, Error, Validate)
 │   │   └── utils/          # Tiện ích chung (Logger, Email, Cloudinary)
 │   ├── modules/            # Chứa các Module nghiệp vụ (Domain-driven)
+│   │   ├── <module_name>/  # Cấu trúc chuẩn hóa cho mỗi Module:
+│   │   │   ├── entities/   # Tầng định nghĩa dữ liệu (Mongoose Schemas/Models)
+│   │   │   ├── services/   # Tầng xử lý logic nghiệp vụ chuyên biệt
+│   │   │   ├── controllers/# HTTP Controllers & Socket.io Handlers
+│   │   │   ├── routes/     # Định tuyến APIs (HTTP Express Routes)
+│   │   │   ├── workers/    # Tiến trình chạy ngầm (Workers - nếu có)
+│   │   │   └── index.js    # Entry point socket hoặc exports chung của module
 │   │   ├── auth/           # Xác thực, Đăng ký, OTP
 │   │   ├── users/          # Quản lý Profile, Kháng cáo
 │   │   ├── match/          # Ghép cặp, Matchmaking Logic
@@ -119,6 +131,46 @@ lingoswap-backend/
 ├── package.json            # Dependencies & Scripts
 └── server.js               # Entry point khởi động hệ thống
 ```
+
+---
+
+## 🧪 Hệ Thống Kiểm Thử (Testing System)
+
+Hệ thống tích hợp bộ kiểm thử tự động toàn diện sử dụng **Jest** (Testing Framework) và **Supertest** (Kiểm thử HTTP API). Toàn bộ dữ liệu của test được cô lập bằng cách sử dụng cơ sở dữ liệu giả lập trong bộ nhớ (`mongodb-memory-server`) và mock Redis, giúp việc chạy test độc lập và không ảnh hưởng đến dữ liệu thật.
+
+### 1. Các lệnh chạy kiểm thử (Testing Scripts)
+
+* **Chạy toàn bộ các test suites (Unit + Integration):**
+  ```bash
+  npm run test
+  ```
+* **Chạy riêng Unit Tests:**
+  ```bash
+  npm run test:unit
+  ```
+* **Chạy riêng Integration Tests:**
+  ```bash
+  npm run test:integration
+  ```
+* **Chạy kiểm thử ở chế độ theo dõi (Watch Mode):**
+  ```bash
+  npm run test:watch
+  ```
+
+### 2. Các nhóm Testcase chính (Key Test Suites)
+
+#### A. Unit Tests (`tests/unit/`) - Kiểm thử logic nghiệp vụ độc lập
+* **`match.service.test.js`**: Kiểm tra thuật toán matchmaking, ghép đôi ngôn ngữ, tính toán streak liên tục của người dùng (tính toán an toàn múi giờ và reset chuỗi khi đứt quãng).
+* **`auth.service.test.js`**: Kiểm tra quy trình đăng ký, mã hóa mật khẩu, đăng nhập và cấp phát token JWT.
+* **`user.service.test.js`**: Xác thực các logic cập nhật thông tin hồ sơ, tải lên avatar và gửi kháng cáo tài khoản.
+* **`friend.service.test.js`**: Kiểm thử các thao tác kết bạn, đồng ý/từ chối lời mời và hủy quan hệ bạn bè.
+* **`report.service.test.js` & `notification.service.test.js`**: Xác thực tính chính xác của cơ chế báo cáo vi phạm và hệ thống thông báo đẩy.
+
+#### B. Integration Tests (`tests/integration/`) - Kiểm thử tích hợp luồng API thực tế
+* **`auth_flow.test.js`**: Luồng API hoàn chỉnh đăng ký, đăng nhập và lấy thông tin cá nhân.
+* **`friendship_flow.test.js`**: Luồng kết bạn từ đầu đến cuối: Gửi kết bạn ➔ Nhận ➔ Đồng ý ➔ Kiểm tra danh sách ➔ Hủy kết bạn.
+* **`matching_chat.test.js`**: Luồng API cho matchmaking, tạo hội thoại, tải lên ảnh chat và gửi đánh giá (review) sau cuộc gọi.
+* **`reports_notifications.test.js`**: Luồng người dùng gửi báo cáo vi phạm và Admin xử lý khóa tài khoản thông qua API.
 
 ---
 

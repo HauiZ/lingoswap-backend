@@ -1,5 +1,6 @@
 import redis from '../../../core/config/redis.js';
 import presenceService from '../../presence/services/presence.service.js';
+import User from '../../users/entities/User.js';
 import {
     findOrQueuePartnerService,
     handleQueueTimeoutService,
@@ -9,6 +10,22 @@ import {
 } from '../services/match.service.js';
 
 const QUEUE_TIMEOUT_SECONDS = 60;
+
+// Helper: lấy tên user từ DB (cache trong Redis 10 phút)
+const getUserName = async (userId) => {
+    try {
+        const cacheKey = `username:${userId}`;
+        const cached = await redis.get(cacheKey);
+        if (cached) return cached;
+
+        const user = await User.findById(userId).select('profile.fullName').lean();
+        const name = user?.profile?.fullName || 'LingoSwap User';
+        await redis.set(cacheKey, name, 'EX', 600); // cache 10 phút
+        return name;
+    } catch {
+        return 'LingoSwap User';
+    }
+};
 
 export const handleMatchProvider = (io, socket) => {
     const getUserId = () => {
@@ -173,6 +190,11 @@ export const handleMatchProvider = (io, socket) => {
                 io.to(callerSocketId).emit('direct_match_error', { message: 'Lỗi khi đồng ý kết nối.' });
             }
         }
+    });
+
+    socket.on('join_call_room', ({ sessionId }) => {
+        socket.join(sessionId);
+        console.log(`[CallRoom] ${getUserId()} joined/re-joined room ${sessionId}`);
     });
 
     socket.on('webrtc_offer', ({ sessionId, offer }) => {

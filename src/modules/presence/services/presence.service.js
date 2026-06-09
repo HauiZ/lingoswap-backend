@@ -1,5 +1,6 @@
 import redis from '../../../core/config/redis.js';
 import Friendship from '../../friends/entities/Friendship.js';
+import User from '../../users/entities/User.js';
 
 const onlineUsers = new Map();
 const disconnectTimers = new Map(); // Grace period timers
@@ -130,6 +131,20 @@ const startTimeoutChecker = (io) => {
 
         // Xử lý từng user hết hạn
         for (const userId of expiredUsers) {
+            // Không kick user đang in-call hoặc waiting
+            try {
+                const user = await User.findById(userId).select("status").lean();
+                if (user?.status === "in-call" || user?.status === "waiting") {
+                    const entry = onlineUsers.get(userId);
+                    if (entry) entry.lastHeartbeat = Date.now(); // gia hạn
+                    console.log(`[Presence] Bỏ qua timeout cho ${userId} (status=${user.status})`);
+                    continue;
+                }
+            } catch (e) {
+                console.error(`[Presence] Lỗi check status ${userId}:`, e.message);
+                continue; // lỗi DB → không kick để an toàn
+            }
+
             console.log(`[Presence] Heartbeat timeout → ${userId}`);
             await setOffline(userId, io);
         }

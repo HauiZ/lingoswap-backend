@@ -19,7 +19,9 @@ const io = new Server(httpServer, {
     origin: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     credentials: true,
-  }
+  },
+  pingInterval: 25000,
+  pingTimeout: 60000,
 });
 
 io.use(socketAuth);

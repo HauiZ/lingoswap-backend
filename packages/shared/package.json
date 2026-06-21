@@ -1,0 +1,23 @@
+{
+  "name": "@lingoswap/shared",
+  "version": "1.0.0",
+  "description": "Shared utilities, middlewares and event bus for LingoSwap microservices",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./utils/*": "./src/utils/*",
+    "./middlewares/*": "./src/middlewares/*",
+    "./events/*": "./src/events/*",
+    "./http/*": "./src/http/*"
+  },
+  "dependencies": {
+    "axios": "^1.13.6",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.3.1",
+    "ioredis": "^5.10.1",
+    "jsonwebtoken": "^9.0.0",
+    "nodemailer": "^8.0.2",
+    "winston": "^3.19.0"
+  }
+}

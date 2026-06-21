@@ -1,0 +1,446 @@
+# ═══════════════════════════════════════════════════════════════════
+# LingoSwap — Render.com Blueprint
+# ═══════════════════════════════════════════════════════════════════
+# Deploy tất cả microservices lên Render.com
+# Docs: https://render.com/docs/blueprint-spec
+#
+# Cách dùng:
+#   1. Push code lên GitHub
+#   2. Vào Render Dashboard → New → Blueprint
+#   3. Chọn repo và file render.yaml này
+#   4. Điền các env vars (marked as sync: false)
+# ═══════════════════════════════════════════════════════════════════
+
+services:
+
+  # ─── API Gateway ─────────────────────────────────────────────
+  - type: web
+    name: lingoswap-api-gateway
+    runtime: node
+    rootDir: services/api-gateway
+    buildCommand: npm install
+    startCommand: npm start
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: JWT_SECRET
+        sync: false
+      - key: REDIS_URI
+        fromService:
+          name: lingoswap-redis
+          type: redis
+          property: connectionString
+      - key: AUTH_SERVICE_URL
+        fromService:
+          name: lingoswap-auth-service
+          type: web
+          property: host
+      - key: USER_SERVICE_URL
+        fromService:
+          name: lingoswap-user-service
+          type: web
+          property: host
+      - key: CHAT_SERVICE_URL
+        fromService:
+          name: lingoswap-chat-service
+          type: web
+          property: host
+      - key: MATCH_SERVICE_URL
+        fromService:
+          name: lingoswap-match-service
+          type: web
+          property: host
+      - key: FRIEND_SERVICE_URL
+        fromService:
+          name: lingoswap-friend-service
+          type: web
+          property: host
+      - key: NOTIFICATION_SERVICE_URL
+        fromService:
+          name: lingoswap-notification-service
+          type: web
+          property: host
+      - key: PRESENCE_SERVICE_URL
+        fromService:
+          name: lingoswap-presence-service
+          type: web
+          property: host
+      - key: REPORT_SERVICE_URL
+        fromService:
+          name: lingoswap-report-service
+          type: web
+          property: host
+      - key: ADMIN_SERVICE_URL
+        fromService:
+          name: lingoswap-admin-service
+          type: web
+          property: host
+
+  # ─── Auth Service ─────────────────────────────────────────────
+  - type: web
+    name: lingoswap-auth-service
+    runtime: node
+    rootDir: services/auth-service
+    buildCommand: npm install
+    startCommand: npm start
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5001
+      - key: DB_URI
+        sync: false  # MongoDB Atlas connection string
+      - key: REDIS_URI
+        fromService:
+          name: lingoswap-redis
+          type: redis
+          property: connectionString
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRE
+        value: 1d
+      - key: JWT_REFRESH_SECRET
+        sync: false
+      - key: JWT_REFRESH_EXPIRE
+        value: 30d
+      - key: OAUTH_CLIENT_ID
+        sync: false
+      - key: OAUTH_CLIENT_SECRET
+        sync: false
+      - key: OAUTH_REFRESH_TOKEN
+        sync: false
+      - key: MY_EMAIL_ACCOUNT
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+
+  # ─── User Service ──────────────────────────────────────────────
+  - type: web
+    name: lingoswap-user-service
+    runtime: node
+    rootDir: services/user-service
+    buildCommand: npm install
+    startCommand: npm start
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5002
+      - key: DB_URI
+        sync: false
+      - key: REDIS_URI
+        fromService:
+          name: lingoswap-redis
+          type: redis
+          property: connectionString
+      - key: JWT_SECRET
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: FRIEND_SERVICE_URL
+        fromService:
+          name: lingoswap-friend-service
+          type: web
+          property: host
+      - key: PRESENCE_SERVICE_URL
+        fromService:
+          name: lingoswap-presence-service
+          type: web
+          property: host
+      - key: CHAT_SERVICE_URL
+        fromService:
+          name: lingoswap-chat-service
+          type: web
+          property: host
+
+  # ─── Chat Service ──────────────────────────────────────────────
+  - type: web
+    name: lingoswap-chat-service
+    runtime: node
+    rootDir: services/chat-service
+    buildCommand: npm install
+    startCommand: npm start
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5003
+      - key: DB_URI
+        sync: false
+      - key: REDIS_URI
+        fromService:
+          name: lingoswap-redis
+          type: redis
+          property: connectionString
+      - key: JWT_SECRET
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: PRESENCE_SERVICE_URL
+        fromService:
+          name: lingoswap-presence-service
+          type: web
+          property: host
+      - key: ADMIN_SERVICE_URL
+        fromService:
+          name: lingoswap-admin-service
+          type: web
+          property: host
+
+  # ─── Match Service ─────────────────────────────────────────────
+  - type: web
+    name: lingoswap-match-service
+    runtime: node
+    rootDir: services/match-service
+    buildCommand: npm install
+    startCommand: npm start
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5004
+      - key: DB_URI
+        sync: false
+      - key: REDIS_URI
+        fromService:
+          name: lingoswap-redis
+          type: redis
+          property: connectionString
+      - key: JWT_SECRET
+        sync: false
+      - key: USER_SERVICE_URL
+        fromService:
+          name: lingoswap-user-service
+          type: web
+          property: host
+      - key: PRESENCE_SERVICE_URL
+        fromService:
+          name: lingoswap-presence-service
+          type: web
+          property: host
+
+  # ─── Friend Service ────────────────────────────────────────────
+  - type: web
+    name: lingoswap-friend-service
+    runtime: node
+    rootDir: services/friend-service
+    buildCommand: npm install
+    startCommand: npm start
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5005
+      - key: DB_URI
+        sync: false
+      - key: REDIS_URI
+        fromService:
+          name: lingoswap-redis
+          type: redis
+          property: connectionString
+      - key: JWT_SECRET
+        sync: false
+      - key: USER_SERVICE_URL
+        fromService:
+          name: lingoswap-user-service
+          type: web
+          property: host
+      - key: CHAT_SERVICE_URL
+        fromService:
+          name: lingoswap-chat-service
+          type: web
+          property: host
+      - key: NOTIFICATION_SERVICE_URL
+        fromService:
+          name: lingoswap-notification-service
+          type: web
+          property: host
+      - key: PRESENCE_SERVICE_URL
+        fromService:
+          name: lingoswap-presence-service
+          type: web
+          property: host
+
+  # ─── Notification Service ──────────────────────────────────────
+  - type: web
+    name: lingoswap-notification-service
+    runtime: node
+    rootDir: services/notification-service
+    buildCommand: npm install
+    startCommand: npm start
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5006
+      - key: DB_URI
+        sync: false
+      - key: REDIS_URI
+        fromService:
+          name: lingoswap-redis
+          type: redis
+          property: connectionString
+      - key: JWT_SECRET
+        sync: false
+      - key: USER_SERVICE_URL
+        fromService:
+          name: lingoswap-user-service
+          type: web
+          property: host
+
+  # ─── Presence Service ──────────────────────────────────────────
+  - type: web
+    name: lingoswap-presence-service
+    runtime: node
+    rootDir: services/presence-service
+    buildCommand: npm install
+    startCommand: npm start
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5007
+      - key: REDIS_URI
+        fromService:
+          name: lingoswap-redis
+          type: redis
+          property: connectionString
+      - key: JWT_SECRET
+        sync: false
+      - key: USER_SERVICE_URL
+        fromService:
+          name: lingoswap-user-service
+          type: web
+          property: host
+      - key: FRIEND_SERVICE_URL
+        fromService:
+          name: lingoswap-friend-service
+          type: web
+          property: host
+
+  # ─── Report Service ────────────────────────────────────────────
+  - type: web
+    name: lingoswap-report-service
+    runtime: node
+    rootDir: services/report-service
+    buildCommand: npm install
+    startCommand: npm start
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5008
+      - key: DB_URI
+        sync: false
+      - key: REDIS_URI
+        fromService:
+          name: lingoswap-redis
+          type: redis
+          property: connectionString
+      - key: JWT_SECRET
+        sync: false
+      - key: USER_SERVICE_URL
+        fromService:
+          name: lingoswap-user-service
+          type: web
+          property: host
+      - key: NOTIFICATION_SERVICE_URL
+        fromService:
+          name: lingoswap-notification-service
+          type: web
+          property: host
+
+  # ─── Admin Service ─────────────────────────────────────────────
+  - type: web
+    name: lingoswap-admin-service
+    runtime: node
+    rootDir: services/admin-service
+    buildCommand: npm install
+    startCommand: npm start
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5009
+      - key: DB_URI
+        sync: false
+      - key: REDIS_URI
+        fromService:
+          name: lingoswap-redis
+          type: redis
+          property: connectionString
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_REFRESH_SECRET
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: MY_EMAIL_ACCOUNT
+        sync: false
+      - key: OAUTH_CLIENT_ID
+        sync: false
+      - key: OAUTH_CLIENT_SECRET
+        sync: false
+      - key: OAUTH_REFRESH_TOKEN
+        sync: false
+      - key: USER_SERVICE_URL
+        fromService:
+          name: lingoswap-user-service
+          type: web
+          property: host
+      - key: MATCH_SERVICE_URL
+        fromService:
+          name: lingoswap-match-service
+          type: web
+          property: host
+      - key: CHAT_SERVICE_URL
+        fromService:
+          name: lingoswap-chat-service
+          type: web
+          property: host
+      - key: FRIEND_SERVICE_URL
+        fromService:
+          name: lingoswap-friend-service
+          type: web
+          property: host
+      - key: REPORT_SERVICE_URL
+        fromService:
+          name: lingoswap-report-service
+          type: web
+          property: host
+      - key: PRESENCE_SERVICE_URL
+        fromService:
+          name: lingoswap-presence-service
+          type: web
+          property: host
+      - key: NOTIFICATION_SERVICE_URL
+        fromService:
+          name: lingoswap-notification-service
+          type: web
+          property: host
+
+  # ─── Redis ─────────────────────────────────────────────────────
+  - type: redis
+    name: lingoswap-redis
+    plan: free
+    ipAllowList: []  # Allow all (internal only)

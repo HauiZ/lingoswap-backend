@@ -1,30 +1,16 @@
 version: '3.8'
 
-services:
-  # ─── LingoSwap Backend ───
-  app:
-    build: .
-    container_name: lingoswap-backend
-    restart: unless-stopped
-    ports:
-      - "${PORT:-5000}:5000"
-    env_file:
-      - .env
-    environment:
-      - NODE_ENV=production
-      - DB_URI=mongodb://mongo:27017/lingoswap
-      - REDIS_URI=redis://redis:6379
-    depends_on:
-      mongo:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    volumes:
-      - app-logs:/app/logs
-    networks:
-      - lingoswap-network
+# ═══════════════════════════════════════════════════════════════════
+# LingoSwap Microservices — Docker Compose
+# ═══════════════════════════════════════════════════════════════════
+# Dùng cho local development và staging.
+# Deploy production lên Render.com thông qua render.yaml
+# ═══════════════════════════════════════════════════════════════════
 
-  # ─── MongoDB ───
+services:
+
+  # ─── Infrastructure ───────────────────────────────────────────
+
   mongo:
     image: mongo:7
     container_name: lingoswap-mongo
@@ -41,7 +27,6 @@ services:
     networks:
       - lingoswap-network
 
-  # ─── Redis ───
   redis:
     image: redis:7-alpine
     container_name: lingoswap-redis
@@ -50,6 +35,7 @@ services:
       - "6379:6379"
     volumes:
       - redis-data:/data
+    command: redis-server --appendonly yes
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -58,10 +44,285 @@ services:
     networks:
       - lingoswap-network
 
+  # ─── API Gateway (Port 5000) ──────────────────────────────────
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: services/api-gateway/Dockerfile
+    container_name: lingoswap-gateway
+    restart: unless-stopped
+    ports:
+      - "${GATEWAY_PORT:-5000}:5000"
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=5000
+      - JWT_SECRET=${JWT_SECRET}
+      - REDIS_URI=redis://redis:6379
+      - AUTH_SERVICE_URL=http://auth-service:5001
+      - USER_SERVICE_URL=http://user-service:5002
+      - CHAT_SERVICE_URL=http://chat-service:5003
+      - MATCH_SERVICE_URL=http://match-service:5004
+      - FRIEND_SERVICE_URL=http://friend-service:5005
+      - NOTIFICATION_SERVICE_URL=http://notification-service:5006
+      - PRESENCE_SERVICE_URL=http://presence-service:5007
+      - REPORT_SERVICE_URL=http://report-service:5008
+      - ADMIN_SERVICE_URL=http://admin-service:5009
+    depends_on:
+      redis:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+      user-service:
+        condition: service_started
+    networks:
+      - lingoswap-network
+
+  # ─── Auth Service (Port 5001) ────────────────────────────────
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: services/auth-service/Dockerfile
+    container_name: lingoswap-auth
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=5001
+      - DB_URI=mongodb://mongo:27017/lingoswap_auth
+      - REDIS_URI=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRE=${JWT_EXPIRE:-1d}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - JWT_REFRESH_EXPIRE=${JWT_REFRESH_EXPIRE:-30d}
+      - OAUTH_CLIENT_ID=${OAUTH_CLIENT_ID}
+      - OAUTH_CLIENT_SECRET=${OAUTH_CLIENT_SECRET}
+      - OAUTH_REFRESH_TOKEN=${OAUTH_REFRESH_TOKEN}
+      - MY_EMAIL_ACCOUNT=${MY_EMAIL_ACCOUNT}
+      - FRONTEND_URL=${FRONTEND_URL}
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - lingoswap-network
+
+  # ─── User Service (Port 5002) ────────────────────────────────
+
+  user-service:
+    build:
+      context: .
+      dockerfile: services/user-service/Dockerfile
+    container_name: lingoswap-user
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=5002
+      - DB_URI=mongodb://mongo:27017/lingoswap_users
+      - REDIS_URI=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET}
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
+      - FRIEND_SERVICE_URL=http://friend-service:5005
+      - PRESENCE_SERVICE_URL=http://presence-service:5007
+      - CHAT_SERVICE_URL=http://chat-service:5003
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - lingoswap-network
+
+  # ─── Chat Service (Port 5003) ────────────────────────────────
+
+  chat-service:
+    build:
+      context: .
+      dockerfile: services/chat-service/Dockerfile
+    container_name: lingoswap-chat
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=5003
+      - DB_URI=mongodb://mongo:27017/lingoswap_chat
+      - REDIS_URI=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET}
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
+      - PRESENCE_SERVICE_URL=http://presence-service:5007
+      - ADMIN_SERVICE_URL=http://admin-service:5009
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - lingoswap-network
+
+  # ─── Match Service (Port 5004) ───────────────────────────────
+
+  match-service:
+    build:
+      context: .
+      dockerfile: services/match-service/Dockerfile
+    container_name: lingoswap-match
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=5004
+      - DB_URI=mongodb://mongo:27017/lingoswap_match
+      - REDIS_URI=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET}
+      - USER_SERVICE_URL=http://user-service:5002
+      - PRESENCE_SERVICE_URL=http://presence-service:5007
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - lingoswap-network
+
+  # ─── Friend Service (Port 5005) ──────────────────────────────
+
+  friend-service:
+    build:
+      context: .
+      dockerfile: services/friend-service/Dockerfile
+    container_name: lingoswap-friend
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=5005
+      - DB_URI=mongodb://mongo:27017/lingoswap_friends
+      - REDIS_URI=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET}
+      - USER_SERVICE_URL=http://user-service:5002
+      - CHAT_SERVICE_URL=http://chat-service:5003
+      - NOTIFICATION_SERVICE_URL=http://notification-service:5006
+      - PRESENCE_SERVICE_URL=http://presence-service:5007
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - lingoswap-network
+
+  # ─── Notification Service (Port 5006) ───────────────────────
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: services/notification-service/Dockerfile
+    container_name: lingoswap-notification
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=5006
+      - DB_URI=mongodb://mongo:27017/lingoswap_notifications
+      - REDIS_URI=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET}
+      - USER_SERVICE_URL=http://user-service:5002
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - lingoswap-network
+
+  # ─── Presence Service (Port 5007) ───────────────────────────
+
+  presence-service:
+    build:
+      context: .
+      dockerfile: services/presence-service/Dockerfile
+    container_name: lingoswap-presence
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=5007
+      - REDIS_URI=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET}
+      - USER_SERVICE_URL=http://user-service:5002
+      - FRIEND_SERVICE_URL=http://friend-service:5005
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - lingoswap-network
+
+  # ─── Report Service (Port 5008) ──────────────────────────────
+
+  report-service:
+    build:
+      context: .
+      dockerfile: services/report-service/Dockerfile
+    container_name: lingoswap-report
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=5008
+      - DB_URI=mongodb://mongo:27017/lingoswap_reports
+      - REDIS_URI=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET}
+      - USER_SERVICE_URL=http://user-service:5002
+      - NOTIFICATION_SERVICE_URL=http://notification-service:5006
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - lingoswap-network
+
+  # ─── Admin Service (Port 5009) ───────────────────────────────
+
+  admin-service:
+    build:
+      context: .
+      dockerfile: services/admin-service/Dockerfile
+    container_name: lingoswap-admin
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=5009
+      - DB_URI=mongodb://mongo:27017/lingoswap_admin
+      - REDIS_URI=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - FRONTEND_URL=${FRONTEND_URL}
+      - MY_EMAIL_ACCOUNT=${MY_EMAIL_ACCOUNT}
+      - OAUTH_CLIENT_ID=${OAUTH_CLIENT_ID}
+      - OAUTH_CLIENT_SECRET=${OAUTH_CLIENT_SECRET}
+      - OAUTH_REFRESH_TOKEN=${OAUTH_REFRESH_TOKEN}
+      - USER_SERVICE_URL=http://user-service:5002
+      - MATCH_SERVICE_URL=http://match-service:5004
+      - CHAT_SERVICE_URL=http://chat-service:5003
+      - FRIEND_SERVICE_URL=http://friend-service:5005
+      - REPORT_SERVICE_URL=http://report-service:5008
+      - PRESENCE_SERVICE_URL=http://presence-service:5007
+      - NOTIFICATION_SERVICE_URL=http://notification-service:5006
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - lingoswap-network
+
+# ─── Volumes ──────────────────────────────────────────────────
+
 volumes:
   mongo-data:
   redis-data:
-  app-logs:
+
+# ─── Networks ─────────────────────────────────────────────────
 
 networks:
   lingoswap-network:

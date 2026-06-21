@@ -1,24 +1,30 @@
 {
-  "name": "lingoswap_backend",
+  "name": "lingoswap-monorepo",
   "version": "1.0.0",
   "description": "LingoSwap - Nền tảng trao đổi ngôn ngữ trực tuyến",
-  "main": "server.js",
   "type": "module",
+  "workspaces": [
+    "packages/*",
+    "services/*"
+  ],
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
+    "dev:all": "npm run dev --workspaces --if-present",
     "db:seed": "node scripts/seed.js",
     "test": "jest --detectOpenHandles --forceExit",
     "test:unit": "jest --testPathPattern=tests/unit --detectOpenHandles --forceExit",
     "test:integration": "jest --testPathPattern=tests/integration --detectOpenHandles --forceExit",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "test:all": "npm test --workspaces --if-present"
   },
   "keywords": [
     "language-exchange",
     "api",
     "nodejs",
     "express",
-    "mongodb"
+    "mongodb",
+    "microservices"
   ],
   "author": "LingoSwap Team",
   "license": "ISC",
@@ -56,7 +62,7 @@
     "supertest": "^6.3.3"
   },
   "engines": {
-    "node": ">=14.0.0",
-    "npm": ">=6.0.0"
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
   }
 }

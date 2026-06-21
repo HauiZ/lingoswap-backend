@@ -6,7 +6,8 @@ import {
   updateUserStatus,
   updateUserStats,
   banUserInternal,
-  getUsersStats
+  getUsersStats,
+  getUsersInternal
 } from '../controllers/internal.controller.js';
 import { requireInternalService } from '../middlewares/authMiddleware.js';
 
@@ -15,6 +16,7 @@ const router = express.Router();
 // Tất cả internal routes đều yêu cầu header X-Internal-Service
 router.use(requireInternalService);
 
+router.get('/users', getUsersInternal);
 router.get('/users/stats', getUsersStats);
 router.get('/users/:id', getUserByIdInternal);
 router.get('/users/:id/basic', getUserBasicInfo);

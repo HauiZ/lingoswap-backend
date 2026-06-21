@@ -83,6 +83,18 @@ const getUsersStats = async (req, res) => {
   }
 };
 
+const getUsersInternal = async (req, res) => {
+  try {
+    const { role } = req.query;
+    const query = {};
+    if (role) query.role = role;
+    const users = await User.find(query).select('_id');
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 export {
   getUserByIdInternal,
   getUserBasicInfo,
@@ -90,5 +102,6 @@ export {
   updateUserStatus,
   updateUserStats,
   banUserInternal,
-  getUsersStats
+  getUsersStats,
+  getUsersInternal
 };

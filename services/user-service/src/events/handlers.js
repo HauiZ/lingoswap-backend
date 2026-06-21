@@ -130,8 +130,24 @@ export const registerEventHandlers = (eventBus) => {
         );
       }
       console.log(`✅ [User Service] Updated stats for participants`);
+  });
+
+  // Khi User offline → cập nhật lastOnlineAt và reset status về idle
+  eventBus.subscribe(EventTypes.USER_OFFLINE, async (payload) => {
+    try {
+      const { userId, timestamp } = payload;
+      console.log(`📩 [User Service] Handling USER_OFFLINE for user: ${userId}`);
+      if (!userId) return;
+
+      await User.findByIdAndUpdate(userId, {
+        $set: {
+          lastOnlineAt: timestamp ? new Date(timestamp) : new Date(),
+          status: 'idle'
+        }
+      });
+      console.log(`✅ [User Service] Updated lastOnlineAt and set idle status for: ${userId}`);
     } catch (err) {
-      console.error(`❌ [User Service] Error in MATCH_ENDED handler:`, err.message);
+      console.error(`❌ [User Service] Error in USER_OFFLINE handler:`, err.message);
     }
   });
 };

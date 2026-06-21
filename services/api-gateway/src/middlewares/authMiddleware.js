@@ -1,19 +1,6 @@
 import jwt from 'jsonwebtoken';
-import Redis from 'ioredis';
-
-// Redis client cho blacklist check (lazy init)
-let _redis = null;
-
-const getRedis = () => {
-  if (!_redis) {
-    const uri = process.env.REDIS_URI || 'redis://localhost:6379';
-    _redis = new Redis(uri, {
-      lazyConnect: true,
-      retryStrategy: (times) => Math.min(times * 100, 3000),
-    });
-  }
-  return _redis;
-};
+import redis from '../config/redis.js';
+import env from '../config/env.js';
 
 /**
  * Middleware xác thực JWT - stateless, không query DB.
@@ -30,10 +17,9 @@ const authenticateToken = async (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, env.JWT_SECRET);
 
     // Kiểm tra Redis Blacklist xem user có bị ban không
-    const redis = getRedis();
     const isBanned = await redis.get(`blacklist:banned:${decoded.id}`);
     if (isBanned) {
       return res.status(403).json({ error: 'Tài khoản đã bị khóa' });
@@ -66,16 +52,4 @@ const authorizeRoles = (...roles) => {
   };
 };
 
-/**
- * Middleware verify internal service calls.
- * Chặn requests không đến từ internal services.
- */
-const requireInternalService = (req, res, next) => {
-  const internalHeader = req.headers['x-internal-service'];
-  if (!internalHeader) {
-    return res.status(403).json({ error: 'Forbidden: Internal API only' });
-  }
-  next();
-};
-
-export { authenticateToken, authorizeRoles, requireInternalService };
+export { authenticateToken, authorizeRoles };

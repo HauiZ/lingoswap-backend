@@ -27,7 +27,7 @@ app.get('/health', (req, res) => {
 });
 
 // Internal routes (không có tiền tố /api/users, được mount trực tiếp ở root level)
-app.use('/', internalRoutes);
+app.use('/internal', internalRoutes);
 
 // Public API routes
 app.use('/api/users', userRoutes);

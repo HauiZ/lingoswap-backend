@@ -10,8 +10,8 @@ import eventBus from '../config/eventBus.js';
 import { EventTypes } from '../events/eventTypes.js';
 import { validateEmail, validatePassword } from '../utils/validators.js';
 import { generateAccessToken, generateRefreshToken } from '../utils/generateToken.js';
-import { sendEmail } from '../utils/sendEmail.js';
-import { renderEmailTemplate } from '../utils/emailTemplate.js';
+import sendEmail from '../utils/sendEmail.js';
+import renderEmailTemplate from '../utils/emailTemplate.js';
 import ApiError from '../utils/ApiError.js';
 
 const googleClient = new OAuth2Client(env.OAUTH_CLIENT_ID);

@@ -22,7 +22,7 @@ app.get('/health', (req, res) => {
 });
 
 // Mount internal routing
-app.use('/', internalRoutes);
+app.use('/internal', internalRoutes);
 
 // 404 handler
 app.use((req, res) => {

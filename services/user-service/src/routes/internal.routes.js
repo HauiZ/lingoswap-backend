@@ -6,8 +6,16 @@ import {
   updateUserStatus,
   updateUserStats,
   banUserInternal,
+  unbanUserInternal,
+  deleteUserInternal,
   getUsersStats,
-  getUsersInternal
+  getUsersInternal,
+  createUserReviewInternal,
+  getUserReviewsBySessionsInternal,
+  getUserReviewsBySessionInternal,
+  checkUserReviewInternal,
+  getAllAppealsInternal,
+  resolveAppealInternal
 } from '../controllers/internal.controller.js';
 import { requireInternalService } from '../middlewares/authMiddleware.js';
 
@@ -24,5 +32,15 @@ router.post('/users/bulk', getUsersByIds);
 router.patch('/users/:id/status', updateUserStatus);
 router.patch('/users/:id/stats', updateUserStats);
 router.patch('/users/:id/ban', banUserInternal);
+router.patch('/users/:id/unban', unbanUserInternal);
+router.delete('/users/:id', deleteUserInternal);
+
+router.post('/users/reviews', createUserReviewInternal);
+router.post('/users/reviews/bulk', getUserReviewsBySessionsInternal);
+router.get('/users/reviews/session/:sessionId', getUserReviewsBySessionInternal);
+router.get('/users/reviews/check', checkUserReviewInternal);
+
+router.get('/users/appeals', getAllAppealsInternal);
+router.patch('/users/appeals/:id/resolve', resolveAppealInternal);
 
 export default router;

@@ -1,203 +1,282 @@
-<div align="center">
-  <img src="https://via.placeholder.com/150x150.png?text=LingoSwap+API" alt="LingoSwap Logo" width="120" />
-  <h1>LingoSwap Backend API 🌍</h1>
-  <p>
-    <em>Hệ thống Backend mạnh mẽ, thời gian thực dành cho nền tảng trao đổi ngôn ngữ toàn cầu LingoSwap.</em>
-  </p>
+# LingoSwap Backend — Microservices Architecture
 
-  <!-- Badges -->
-  <p>
-    <img alt="Version" src="https://img.shields.io/badge/version-1.1.0-blue.svg?cacheSeconds=2592000" />
-    <img alt="Node Version" src="https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg" />
-    <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg" />
-    <img alt="PRs Welcome" src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" />
-    <img alt="Docker Support" src="https://img.shields.io/badge/Docker-supported-blue.svg" />
-  </p>
-</div>
+> **Nền tảng trao đổi ngôn ngữ trực tuyến** | Node.js · Express · MongoDB · Redis · Socket.io
 
 ---
 
-## 📖 Giới Thiệu
+## Kiến trúc tổng quan
 
-**LingoSwap Backend** là lõi xử lý dữ liệu và logic nghiệp vụ cho ứng dụng LingoSwap. Hệ thống cung cấp API hiệu suất cao, xử lý kết nối thời gian thực bằng Socket.IO và WebRTC, hỗ trợ ghép cặp người dùng (Matchmaking) để học ngoại ngữ, đồng thời tích hợp hệ thống quản trị chuyên sâu.
+LingoSwap Backend được tổ chức theo kiến trúc **Microservices** với 10 service độc lập giao tiếp qua **REST API nội bộ** và **Redis Pub/Sub (EventBus)**.
 
-Hệ thống được thiết kế theo kiến trúc **Modular Monolith**, đảm bảo tính đóng gói (Encapsulation), dễ bảo trì (Maintainability) và sẵn sàng chuyển đổi sang Microservices khi cần thiết.
-
-## ✨ Tính Năng Nổi Bật
-
-- 🔐 **Xác Thực Đa Luồng:** Đăng nhập truyền thống, Google/Facebook OAuth2, và OTP Email verification.
-- ⚡ **Real-time Matchmaking:** Thuật toán ghép cặp nhanh dựa trên ngôn ngữ muốn học và quốc gia bằng Socket.IO & Redis.
-- 📹 **WebRTC Signaling:** Quản lý luồng tín hiệu (Offer/Answer/ICE Candidate) cho Video/Audio Call P2P.
-- 💬 **Hệ Thống Chat:** Nhắn tin thời gian thực, lưu trữ lịch sử hội thoại an toàn.
-- 🛡️ **Hệ Thống Quản Trị (Admin Dashboard):** Quản lý người dùng, duyệt report, khóa/mở khóa tài khoản, phân tích thống kê trực quan.
-- ⚖️ **Hệ Thống Kháng Cáo (Appeal System):** Cho phép người dùng bị khóa gửi đơn giải trình và được tự động unban qua email workflow.
-- 📧 **Automated Emails:** Gửi email OTP, thông báo khóa tài khoản, duyệt kháng cáo bằng giao diện HTML chuyên nghiệp.
-- 🛡️ **Production Ready:** Tích hợp hệ thống Log tập trung, Kiểm tra dữ liệu và Containerization (Docker).
-
----
-
-## 🛠️ Công Nghệ Sử Dụng
-
-- **Core:** [Node.js](https://nodejs.org/), [Express.js](https://expressjs.com/)
-- **Database:** [MongoDB](https://www.mongodb.com/) (Mongoose ODM)
-- **Caching & Pub/Sub:** [Redis](https://redis.io/)
-- **Real-time:** [Socket.IO](https://socket.io/), [WebRTC](https://webrtc.org/)
-- **Containerization:** [Docker](https://www.docker.com/)
-- **Authentication:** [JSON Web Token (JWT)](https://jwt.io/), [Passport.js](http://www.passportjs.org/), [Bcryptjs](https://www.npmjs.com/package/bcryptjs)
-- **Mailing:** [Nodemailer](https://nodemailer.com/)
-- **Documentation:** [Swagger UI](https://swagger.io/)
+```
+📱 Mobile App / 🌐 Web Admin
+          │
+          ▼
+┌─────────────────────────┐
+│     API Gateway :5000   │  ← Điểm vào duy nhất (REST + Socket.io)
+└──────────┬──────────────┘
+           │ proxy
+     ┌─────┼──────────────────────────────────┐
+     ▼     ▼     ▼     ▼     ▼     ▼     ▼    ▼
+ Auth  User  Chat  Match Friend Notif  Rep  Admin
+ 5001  5002  5003  5004  5005  5006  5008  5009
+                                    Presence:5007
+     │
+     └──────────── Redis Pub/Sub ──────────────┘
+```
 
 ---
 
-## 🚀 Cài Đặt & Khởi Chạy
+## Service Map
 
-### 1. Yêu cầu hệ thống
-- Node.js `v18.x` trở lên
-- MongoDB (Local hoặc MongoDB Atlas)
-- Redis Server (Đang chạy ở port 6379)
-- Docker (Tùy chọn)
+| Service | Port | Database | Chức năng |
+|---------|------|----------|-----------|
+| **api-gateway** | 5000 | — | Proxy REST + Socket.io Hub |
+| **auth-service** | 5001 | `lingoswap_auth` | Đăng ký, đăng nhập, JWT, OAuth, OTP |
+| **user-service** | 5002 | `lingoswap_users` | Profile, avatar, stats, appeals |
+| **chat-service** | 5003 | `lingoswap_chat` | Conversations, messages, ảnh |
+| **match-service** | 5004 | `lingoswap_match` | Queue ghép đôi, WebRTC sessions |
+| **friend-service** | 5005 | `lingoswap_friends` | Kết bạn, chặn, block |
+| **notification-service** | 5006 | `lingoswap_notifications` | Push realtime notifications |
+| **presence-service** | 5007 | RAM + Redis | Online/offline tracking |
+| **report-service** | 5008 | `lingoswap_reports` | Báo cáo vi phạm |
+| **admin-service** | 5009 | `lingoswap_admin` | Admin BFF, dashboard, từ khóa đen |
 
-### 2. Cài đặt trực tiếp
+---
 
-Clone repository và cài đặt các gói thư viện:
+## Cấu trúc thư mục
+
+```
+lingoswap-backend/
+├── packages/
+│   └── shared/                   # Shared utilities (EventBus, ApiError, logger...)
+├── services/
+│   ├── api-gateway/
+│   ├── auth-service/
+│   ├── user-service/
+│   ├── chat-service/
+│   ├── match-service/
+│   ├── friend-service/
+│   ├── notification-service/
+│   ├── presence-service/
+│   ├── report-service/
+│   └── admin-service/
+├── scripts/
+│   ├── seed.js                   # Tạo dữ liệu mẫu (monolith DB)
+│   ├── migrate-to-microservices.js  # Migrate dữ liệu sang từng service DB
+│   └── check-all-services.js    # Kiểm tra toàn bộ service khởi động OK
+├── _archive_monolith_src/        # Monolith cũ (lưu trữ, không dùng)
+├── docker-compose.yml            # Local development
+├── render.yaml                   # Render.com deployment blueprint
+└── package.json                  # npm workspaces root
+```
+
+---
+
+## Chạy local (Development)
+
+### Yêu cầu
+- Node.js >= 18
+- MongoDB (local hoặc Atlas)
+- Redis (local hoặc Upstash)
+
+### 1. Cài dependencies
 
 ```bash
-git clone https://github.com/HauiZ/lingoswap-backend.git
-cd lingoswap-backend
 npm install
 ```
 
-Tạo file `.env` từ `.env.example` và điền đầy đủ thông tin cấu hình.
+### 2. Cấu hình môi trường
 
-**Chạy Development:**
+Tạo file `.env` ở root (mẫu đã có trong `.env`). Các service đọc biến từ đây khi chạy local.
+
+### 3. Tạo dữ liệu mẫu (lần đầu)
+
 ```bash
-npm run dev
+# Seed dữ liệu vào database monolith (lingoswap)
+npm run db:seed
+
+# Migrate dữ liệu sang từng database microservice
+node scripts/migrate-to-microservices.js
 ```
 
-### 3. Khởi chạy bằng Docker (Khuyên dùng cho Production)
-
-Hệ thống đã hỗ trợ Docker Compose để khởi chạy toàn bộ stack (App + MongoDB + Redis):
+### 4. Chạy từng service riêng lẻ
 
 ```bash
+# Ví dụ chạy auth-service
+PORT=5001 DB_URI=mongodb://localhost:27017/lingoswap_auth node services/auth-service/server.js
+
+# Ví dụ chạy user-service
+PORT=5002 DB_URI=mongodb://localhost:27017/lingoswap_users node services/user-service/server.js
+
+# Ví dụ chạy api-gateway
+PORT=5000 node services/api-gateway/server.js
+```
+
+> **Lưu ý:** Presence Service không cần `DB_URI` (chỉ dùng Redis + RAM).
+
+### 5. Kiểm tra toàn bộ service khởi động
+
+```bash
+node scripts/check-all-services.js
+```
+
+---
+
+## Chạy bằng Docker Compose (local)
+
+### Yêu cầu
+- Docker Desktop
+
+### Chạy
+
+```bash
+# Build và khởi động toàn bộ stack (MongoDB + Redis + 10 services)
+docker-compose up --build
+
+# Chạy nền
 docker-compose up -d --build
+
+# Xem logs của service cụ thể
+docker-compose logs -f auth-service
+
+# Dừng
+docker-compose down
+```
+
+Sau khi khởi động, API Gateway sẽ chạy tại: **http://localhost:5000**
+
+---
+
+## Deploy lên Render.com
+
+### Bước 1 — Chuẩn bị MongoDB Atlas
+
+1. Tạo cluster miễn phí tại [cloud.mongodb.com](https://cloud.mongodb.com)
+2. Tạo **9 database** riêng biệt (hoặc dùng chung cluster, khác database name):
+   - `lingoswap_auth`, `lingoswap_users`, `lingoswap_chat`, `lingoswap_match`
+   - `lingoswap_friends`, `lingoswap_notifications`, `lingoswap_reports`, `lingoswap_admin`
+3. Lấy **connection string** dạng: `mongodb+srv://user:pass@cluster.mongodb.net`
+
+### Bước 2 — Chuẩn bị Redis (Upstash)
+
+1. Đăng ký tại [upstash.com](https://upstash.com) → tạo Redis database (free tier)
+2. Lấy **Redis URI** dạng: `rediss://default:xxx@yyy.upstash.io:6379`
+
+### Bước 3 — Deploy qua Render Blueprint
+
+1. Push code lên GitHub
+2. Vào [dashboard.render.com](https://dashboard.render.com) → **New** → **Blueprint**
+3. Chọn repository → Render tự detect file `render.yaml`
+4. Điền các **Secret Environment Variables** cho từng service (xem bảng bên dưới)
+
+### Biến môi trường cần điền thủ công
+
+> Các biến đánh dấu `sync: false` trong `render.yaml` bạn phải điền thủ công.
+
+#### Tất cả services cần chung:
+| Biến | Mô tả |
+|------|-------|
+| `JWT_SECRET` | JWT access token secret (tự sinh, ví dụ: `openssl rand -hex 32`) |
+
+#### Auth Service & Admin Service:
+| Biến | Mô tả |
+|------|-------|
+| `DB_URI` | MongoDB Atlas connection string (database `lingoswap_auth`) |
+| `JWT_REFRESH_SECRET` | JWT refresh token secret |
+| `OAUTH_CLIENT_ID` | Google OAuth Client ID |
+| `OAUTH_CLIENT_SECRET` | Google OAuth Client Secret |
+| `OAUTH_REFRESH_TOKEN` | Google OAuth Refresh Token (để gửi email) |
+| `MY_EMAIL_ACCOUNT` | Gmail account dùng để gửi email (vd: lingoswap@gmail.com) |
+| `FRONTEND_URL` | URL của frontend app (vd: https://lingoswap.vercel.app) |
+
+#### User Service:
+| Biến | Mô tả |
+|------|-------|
+| `DB_URI` | MongoDB Atlas (database `lingoswap_users`) |
+| `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name |
+| `CLOUDINARY_API_KEY` | Cloudinary API key |
+| `CLOUDINARY_API_SECRET` | Cloudinary API secret |
+
+#### Chat Service:
+| Biến | Mô tả |
+|------|-------|
+| `DB_URI` | MongoDB Atlas (database `lingoswap_chat`) |
+| `CLOUDINARY_CLOUD_NAME/API_KEY/API_SECRET` | Cloudinary (cho ảnh chat) |
+
+#### Match / Friend / Notification / Presence / Report Services:
+| Biến | Mô tả |
+|------|-------|
+| `DB_URI` | MongoDB Atlas (database riêng của service) |
+
+> **Presence Service**: Không cần `DB_URI`.
+
+### Bước 4 — Migrate dữ liệu lên production (tùy chọn)
+
+Nếu bạn có dữ liệu cần migrate từ MongoDB local lên Atlas:
+
+```bash
+# Chỉnh MONGO_URI trỏ sang Atlas connection string
+MONGO_URI="mongodb+srv://user:pass@cluster.mongodb.net" node scripts/migrate-to-microservices.js
 ```
 
 ---
 
-## 📚 Tài Liệu API (API Documentation)
+## Giao tiếp giữa các Services
 
-LingoSwap Backend cung cấp 2 phương thức để tra cứu API:
+### REST API nội bộ (synchronous)
 
-1. **Swagger UI (Interactive):** Khi server đang chạy, truy cập `http://localhost:5000/api-docs` để xem và test trực tiếp các endpoint.
-2. **Markdown Doc:** Tham khảo file [`api-doc.md`](./api-doc.md) để đọc tài liệu đặc tả chi tiết về Request/Response payload.
+Các service gọi nhau qua HTTP với header `X-Internal-Service: true`.
+
+Ví dụ: Match Service → User Service để cập nhật stats:
+```
+PATCH http://user-service:5002/internal/users/:id/stats
+```
+
+### EventBus — Redis Pub/Sub (asynchronous)
+
+Tất cả events publish qua channel `lingoswap:events`.
+
+| Event | Publisher | Subscriber(s) |
+|-------|-----------|---------------|
+| `user.created` | Auth Service | User Service |
+| `match.ended` | Match Service | User Service |
+| `notification.push` | Friend/Report/Match Services | Notification Service |
+| `presence.user.online/offline` | Presence Service | User Service |
+| `socket.emit` | Tất cả services | API Gateway |
 
 ---
 
-## 📂 Cấu Trúc Mã Nguồn (Modular Monolith)
+## Scripts tiện ích
 
-```text
-lingoswap-backend/
-├── public/                 # Tài sản tĩnh (ảnh, CSS) và email templates
-├── views/                  # Các giao diện hiển thị EJS (reset password, v.v.)
-├── tests/                  # Bộ kiểm thử tự động (Unit và Integration tests)
-│   ├── unit/               # Thư mục chứa Unit Tests của các dịch vụ nghiệp vụ
-│   ├── integration/        # Thư mục chứa Integration Tests của các luồng API
-│   └── dbHandler.js        # Tiện ích khởi tạo cơ sở dữ liệu giả lập cho kiểm thử
-├── src/
-│   ├── core/               # Các thành phần cốt lõi và dùng chung
-│   │   ├── config/         # Cấu hình Database, Redis, Môi trường
-│   │   ├── middlewares/    # Middleware chung (Auth, Error, Validate)
-│   │   └── utils/          # Tiện ích chung (Logger, Email, Cloudinary)
-│   ├── modules/            # Chứa các Module nghiệp vụ (Domain-driven)
-│   │   ├── <module_name>/  # Cấu trúc chuẩn hóa cho mỗi Module:
-│   │   │   ├── entities/   # Tầng định nghĩa dữ liệu (Mongoose Schemas/Models)
-│   │   │   ├── services/   # Tầng xử lý logic nghiệp vụ chuyên biệt
-│   │   │   ├── controllers/# HTTP Controllers & Socket.io Handlers
-│   │   │   ├── routes/     # Định tuyến APIs (HTTP Express Routes)
-│   │   │   ├── workers/    # Tiến trình chạy ngầm (Workers - nếu có)
-│   │   │   └── index.js    # Entry point socket hoặc exports chung của module
-│   │   ├── auth/           # Xác thực, Đăng ký, OTP
-│   │   ├── users/          # Quản lý Profile, Kháng cáo
-│   │   ├── match/          # Ghép cặp, Matchmaking Logic
-│   │   ├── chat/           # Hội thoại, Tin nhắn
-│   │   ├── friends/        # Quản lý bạn bè
-│   │   ├── admin/          # Quản lý hệ thống, Dashboard
-│   │   ├── notifications/  # Thông báo đẩy
-│   │   ├── reports/        # Báo cáo vi phạm
-│   │   └── presence/       # Trạng thái Online/Offline
-│   └── app.js              # Khởi tạo Express App
-├── Dockerfile              # Cấu hình Docker Image (Multi-stage build)
-├── docker-compose.yml      # Orchestration cho stack dịch vụ
-├── package.json            # Dependencies & Scripts
-└── server.js               # Entry point khởi động hệ thống
+```bash
+# Chạy test monolith (regression)
+npm test
+
+# Seed dữ liệu mẫu
+npm run db:seed
+
+# Migrate dữ liệu sang microservice DBs
+node scripts/migrate-to-microservices.js
+
+# Kiểm tra toàn bộ services khởi động không lỗi
+node scripts/check-all-services.js
 ```
 
 ---
 
-## 🧪 Hệ Thống Kiểm Thử (Testing System)
+## Tech Stack
 
-Hệ thống tích hợp bộ kiểm thử tự động toàn diện sử dụng **Jest** (Testing Framework) và **Supertest** (Kiểm thử HTTP API). Toàn bộ dữ liệu của test được cô lập bằng cách sử dụng cơ sở dữ liệu giả lập trong bộ nhớ (`mongodb-memory-server`) và mock Redis, giúp việc chạy test độc lập và không ảnh hưởng đến dữ liệu thật.
-
-### 1. Các lệnh chạy kiểm thử (Testing Scripts)
-
-* **Chạy toàn bộ các test suites (Unit + Integration):**
-  ```bash
-  npm run test
-  ```
-* **Chạy riêng Unit Tests:**
-  ```bash
-  npm run test:unit
-  ```
-* **Chạy riêng Integration Tests:**
-  ```bash
-  npm run test:integration
-  ```
-* **Chạy kiểm thử ở chế độ theo dõi (Watch Mode):**
-  ```bash
-  npm run test:watch
-  ```
-
-### 2. Các nhóm Testcase chính (Key Test Suites)
-
-#### A. Unit Tests (`tests/unit/`) - Kiểm thử logic nghiệp vụ độc lập
-* **`match.service.test.js`**: Kiểm tra thuật toán matchmaking, ghép đôi ngôn ngữ, tính toán streak liên tục của người dùng (tính toán an toàn múi giờ và reset chuỗi khi đứt quãng).
-* **`auth.service.test.js`**: Kiểm tra quy trình đăng ký, mã hóa mật khẩu, đăng nhập và cấp phát token JWT.
-* **`user.service.test.js`**: Xác thực các logic cập nhật thông tin hồ sơ, tải lên avatar và gửi kháng cáo tài khoản.
-* **`friend.service.test.js`**: Kiểm thử các thao tác kết bạn, đồng ý/từ chối lời mời và hủy quan hệ bạn bè.
-* **`report.service.test.js` & `notification.service.test.js`**: Xác thực tính chính xác của cơ chế báo cáo vi phạm và hệ thống thông báo đẩy.
-
-#### B. Integration Tests (`tests/integration/`) - Kiểm thử tích hợp luồng API thực tế
-* **`auth_flow.test.js`**: Luồng API hoàn chỉnh đăng ký, đăng nhập và lấy thông tin cá nhân.
-* **`friendship_flow.test.js`**: Luồng kết bạn từ đầu đến cuối: Gửi kết bạn ➔ Nhận ➔ Đồng ý ➔ Kiểm tra danh sách ➔ Hủy kết bạn.
-* **`matching_chat.test.js`**: Luồng API cho matchmaking, tạo hội thoại, tải lên ảnh chat và gửi đánh giá (review) sau cuộc gọi.
-* **`reports_notifications.test.js`**: Luồng người dùng gửi báo cáo vi phạm và Admin xử lý khóa tài khoản thông qua API.
-
----
-
-## 🛡️ Quy Ước Phát Triển (Guidelines)
-
-### 1. Luồng Dữ Liệu (Data Flow)
-Mọi luồng API mới phải tuân thủ nghiêm ngặt mô hình 3 lớp:
-`Route` ➔ `Middleware (Xác thực)` ➔ `Controller (Nhận Request)` ➔ `Service (Xử lý Logic/DB)` ➔ `Controller (Trả Response)`
-
-### 2. Xử Lý Lỗi (Error Handling)
-Luôn sử dụng `ApiError` class được định nghĩa trong `src/core/utils/ApiError.js` để ném lỗi trong Service. Tránh việc `try-catch` và trả về `res.status` trực tiếp trong Service.
-
-```javascript
-import ApiError from '../core/utils/ApiError.js';
-
-// Trong Service
-if (!user) throw new ApiError(404, 'Tài khoản không tồn tại');
-```
-
-### 3. Git Workflow
-- Nhánh chính: `main` (Production)
-- Nhánh phát triển: `develop` hoặc các nhánh tính năng (ví dụ: `socials`).
-- Phải tạo Pull Request và review trước khi merge.
-
----
-
-<div align="center">
-  <p>Cảm ơn bạn đã đóng góp cho sự phát triển của LingoSwap! 🚀</p>
-  <p>Bản quyền © 2026 <strong>Đội ngũ LingoSwap</strong></p>
-</div>
+| Công nghệ | Vai trò |
+|-----------|---------|
+| **Node.js 18+** | Runtime |
+| **Express 4** | HTTP framework |
+| **MongoDB / Mongoose** | Database |
+| **Redis (ioredis)** | EventBus Pub/Sub + Cache |
+| **Socket.io 4** | Real-time (tại Gateway) |
+| **JWT** | Authentication (stateless) |
+| **Cloudinary** | Image storage |
+| **Google OAuth2** | Social login + Email |
+| **http-proxy-middleware** | Gateway reverse proxy |
+| **Docker / Docker Compose** | Containerization |
+| **Render.com** | Cloud deployment |

@@ -24,8 +24,8 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', service: 'report-service' });
 });
 
-// Internal API routes
-app.use('/', internalRoutes);
+// Internal routes
+app.use('/internal', internalRoutes);
 
 // Public API routes
 app.use('/api/user/reports', reportRoutes);

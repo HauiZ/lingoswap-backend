@@ -25,7 +25,7 @@ app.get('/health', (req, res) => {
 });
 
 // Internal API routes
-app.use('/', internalRoutes);
+app.use('/internal', internalRoutes);
 
 // Public API routes
 app.use('/api/user/notifications', notificationRoutes);

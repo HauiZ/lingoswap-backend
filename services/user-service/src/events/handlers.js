@@ -76,6 +76,13 @@ export const registerEventHandlers = (eventBus) => {
               newStreak = 1;
             }
 
+            // Bắn socket emit streak_update cho user
+            eventBus.publish(EventTypes.SOCKET_EMIT, {
+              targetUserId: p._id.toString(),
+              event: 'streak_update',
+              data: { streak: newStreak }
+            }).catch(err => console.error(`[User Service] Failed to publish streak_update: ${err.message}`));
+
             bulkOps.push({
               updateOne: {
                 filter: { _id: p._id },
@@ -130,6 +137,9 @@ export const registerEventHandlers = (eventBus) => {
         );
       }
       console.log(`✅ [User Service] Updated stats for participants`);
+    } catch (err) {
+      console.error(`❌ [User Service] Error in MATCH_ENDED handler:`, err.message);
+    }
   });
 
   // Khi User offline → cập nhật lastOnlineAt và reset status về idle

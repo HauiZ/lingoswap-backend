@@ -2,9 +2,10 @@ import reportService from '../services/report.service.js';
 
 const getReportsInternal = async (req, res) => {
   try {
-    const { status, limit, page } = req.query;
+    const { status, limit, page, reportedUserId } = req.query;
     const query = {};
     if (status) query.status = status;
+    if (reportedUserId) query.reportedUserId = reportedUserId;
     const reports = await reportService.getReportsInternal(query, limit, page);
     res.json(reports);
   } catch (err) {

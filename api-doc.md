@@ -423,7 +423,67 @@ Dành riêng cho quản trị viên, yêu cầu `🔒 Admin Token`.
     }
     ```
 
-### 3.5 Lấy danh sách đơn kháng cáo `🔒 Yêu cầu Quyền Admin`
+### 3.5 Lấy danh sách báo cáo vi phạm `🔒 Yêu cầu Quyền Admin`
+- **Method:** `GET`
+- **Endpoint:** `/api/admin/reports`
+- **Query Parameters (Tuỳ chọn):**
+  - `status`: Trạng thái báo cáo (`pending`, `investigating`, `resolved`, `dismissed`).
+  - `page`: Số trang hiện tại (mặc định 1).
+  - `limit`: Số lượng kết quả mỗi trang (mặc định 20).
+- **Responses:**
+  - `200 OK`: Danh sách Reports đã phân trang và lọc.
+    ```json
+    [
+      {
+        "_id": "report_id",
+        "reporterId": {
+          "_id": "...",
+          "profile": { "fullName": "Nguyen Van A" },
+          "email": "user@example.com"
+        },
+        "reportedUserId": {
+          "_id": "...",
+          "profile": { "fullName": "Quấy Rối User" },
+          "email": "reported@example.com",
+          "statusAccount": "active"
+        },
+        "reason": "Spam / xúc phạm",
+        "evidenceMessageIds": ["msg_id_1"],
+        "evidenceImageUrl": "https://res.cloudinary.com/...",
+        "status": "pending",
+        "createdAt": "..."
+      }
+    ]
+    ```
+
+### 3.6 Admin duyệt và xử lý báo cáo vi phạm `🔒 Yêu cầu Quyền Admin`
+- **Method:** `PATCH`
+- **Endpoint:** `/api/admin/reports/{id}/status`
+- **Path Parameters:** `id` = ID của báo cáo vi phạm.
+- **Request Body (JSON):**
+  ```json
+  {
+    "status": "resolved",
+    "adminNotes": "User gian lận, cấm 7 ngày",
+    "banDuration": "7_days" // Tuỳ chọn: "3_days", "7_days", "30_days", "permanent"
+  }
+  ```
+- **Responses:**
+  - `200 OK`: Cập nhật trạng thái báo cáo thành công và thực hiện khóa tài khoản nếu có yêu cầu.
+    ```json
+    {
+      "message": "Đã cập nhật trạng thái báo cáo",
+      "report": {
+        "_id": "report_id",
+        "status": "resolved",
+        "adminNotes": "User gian lận, cấm 7 ngày",
+        "resolvedByAdminId": "admin_id",
+        "evidenceImageUrl": "https://res.cloudinary.com/..."
+      }
+    }
+    ```
+
+### 3.7 Lấy danh sách đơn kháng cáo `🔒 Yêu cầu Quyền Admin`
 - **Method:** `GET`
 - **Endpoint:** `/api/admin/appeals`
 - **Query Parameters:**
@@ -431,7 +491,7 @@ Dành riêng cho quản trị viên, yêu cầu `🔒 Admin Token`.
 - **Responses:**
   - `200 OK`: Danh sách đơn kháng cáo cùng thông tin User và lý do khoá tài khoản (banReason từ Report).
 
-### 3.6 Xử lý đơn kháng cáo `🔒 Yêu cầu Quyền Admin`
+### 3.8 Xử lý đơn kháng cáo `🔒 Yêu cầu Quyền Admin`
 - **Method:** `PATCH`
 - **Endpoint:** `/api/admin/appeals/{id}/status`
 - **Body:**
@@ -444,9 +504,9 @@ Dành riêng cho quản trị viên, yêu cầu `🔒 Admin Token`.
 - **Responses:**
   - `200 OK`: Cập nhật thành công. Nếu `approved`, tài khoản tự động được mở khóa và có email báo.
 
-### 3.7 Quản lý Danh sách từ khóa bị cấm (Blacklist Keywords) `🔒 Yêu cầu Quyền Admin`
+### 3.9 Quản lý Danh sách từ khóa bị cấm (Blacklist Keywords) `🔒 Yêu cầu Quyền Admin`
 
-#### 3.7.1 Thêm từ khóa bị cấm mới
+#### 3.9.1 Thêm từ khóa bị cấm mới
 - **Method:** `POST`
 - **Endpoint:** `/api/admin/blacklist-keywords`
 - **Request Body (JSON):**
@@ -472,7 +532,7 @@ Dành riêng cho quản trị viên, yêu cầu `🔒 Admin Token`.
     ```
   - `400 Bad Request`: `{ "error": "Từ khóa không được để trống" }` hoặc `{ "error": "Từ khóa này đã tồn tại trong danh sách cấm" }`
 
-#### 3.7.2 Lấy danh sách toàn bộ từ khóa bị cấm
+#### 3.9.2 Lấy danh sách toàn bộ từ khóa bị cấm
 - **Method:** `GET`
 - **Endpoint:** `/api/admin/blacklist-keywords`
 - **Query Parameters (Tuỳ chọn):**
@@ -502,7 +562,7 @@ Dành riêng cho quản trị viên, yêu cầu `🔒 Admin Token`.
     }
     ```
 
-#### 3.7.3 Xóa một từ khóa khỏi danh sách cấm
+#### 3.9.3 Xóa một từ khóa khỏi danh sách cấm
 - **Method:** `DELETE`
 - **Endpoint:** `/api/admin/blacklist-keywords/{id}`
 - **Path Parameters:** `id` = ID của từ khóa cấm cần xóa.
@@ -920,18 +980,42 @@ Sử dụng chung các luồng sau cho WebRTC, truyền tải dữ liệu P2P tr
 ### 9.1 Gửi báo cáo vi phạm `🔒 Yêu cầu Token`
 - **Method:** `POST`
 - **Endpoint:** `/api/user/reports`
-- **Body Parameters:**
+- **Content-Type:** `multipart/form-data` hoặc `application/json`
+- **Request Parameters (Multipart/Form-Data):**
+  - `reportedUserId` (bắt buộc): ID của người bị báo cáo.
+  - `reason` (bắt buộc): Lý do báo cáo (ví dụ: Spam, Quấy rối...).
+  - `matchSessionId` (tuỳ chọn): ID phiên chat (nếu có).
+  - `conversationId` (tuỳ chọn): ID cuộc trò chuyện (nếu có).
+  - `evidenceMessageIds` (tuỳ chọn): Mảng ID tin nhắn hoặc chuỗi phân tách bởi dấu phẩy làm bằng chứng.
+  - `evidenceImage` (tuỳ chọn): File hình ảnh bằng chứng quấy rối (được tải lên thư mục `lingoswap/Evidence` trên Cloudinary).
+- **Request Body (JSON):**
   ```json
   {
     "reportedUserId": "ID của người bị báo cáo",
     "reason": "Lý do báo cáo (ví dụ: Spam, Quấy rối...)",
     "matchSessionId": "ID phiên chat (nếu có)",
     "conversationId": "ID cuộc trò chuyện (nếu có)",
-    "evidenceMessageIds": ["ID_tin_nhắn_1", "ID_tin_nhắn_2"]
+    "evidenceMessageIds": ["ID_tin_nhắn_1", "ID_tin_nhắn_2"],
+    "evidenceImageUrl": "Đường dẫn hình ảnh bằng chứng (nếu đã tải lên trước)"
   }
   ```
 - **Responses:**
-  - `201 Created`: `{ "message": "Báo cáo đã được ghi lại thành công", "report": { ... } }`
-  - `400 Bad Request`: `{ "error": "Thiếu thông tin bắt buộc" }`
+  - `201 Created`:
+    ```json
+    {
+      "message": "Gửi báo cáo vi phạm thành công",
+      "report": {
+        "_id": "report_id",
+        "reporterId": "user_id_nguyen_van_a",
+        "reportedUserId": "user_id_nguoi_bi_bao_cao",
+        "reason": "Quấy rối",
+        "evidenceMessageIds": [],
+        "evidenceImageUrl": "https://res.cloudinary.com/...",
+        "status": "pending",
+        "createdAt": "..."
+      }
+    }
+    ```
+  - `400 Bad Request`: `{ "error": "Thiếu thông tin bắt buộc để báo cáo" }`
 
 ---

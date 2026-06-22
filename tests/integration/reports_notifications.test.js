@@ -9,6 +9,24 @@ jest.mock('../../src/core/config/database.js', () => {
   return jest.fn().mockImplementation(() => Promise.resolve());
 });
 jest.mock('ioredis');
+jest.mock('../../src/core/middlewares/upload.js', () => {
+  const multer = require('multer');
+  const upload = multer({ storage: multer.memoryStorage() });
+  const mockSingle = (fieldName) => (req, res, next) => {
+    upload.single(fieldName)(req, res, (err) => {
+      if (err) return next(err);
+      if (req.file) {
+        req.file.path = 'https://res.cloudinary.com/mock-cloud/image/upload/v123/evidence-image.png';
+      }
+      next();
+    });
+  };
+  return {
+    uploadImage: { single: mockSingle },
+    uploadChatImage: { single: mockSingle },
+    uploadEvidenceImage: { single: mockSingle }
+  };
+});
 
 import app from '../../src/app.js';
 
@@ -81,11 +99,13 @@ describe('Integration Test: Reports & Notifications API', () => {
       .send({
         reportedUserId: idC,
         reason: 'xúc phạm',
-        evidenceMessageIds: []
+        evidenceMessageIds: [],
+        evidenceImageUrl: 'https://example.com/evidence.png'
       });
 
     expect(reportRes.status).toBe(201);
     expect(reportRes.body.message).toBe('Gửi báo cáo vi phạm thành công');
+    expect(reportRes.body.report.evidenceImageUrl).toBe('https://example.com/evidence.png');
     const reportId = reportRes.body.report._id;
 
     // Bước 2: Admin lấy danh sách báo cáo vi phạm
@@ -96,6 +116,7 @@ describe('Integration Test: Reports & Notifications API', () => {
     expect(reportsRes.status).toBe(200);
     expect(reportsRes.body.length).toBe(1);
     expect(reportsRes.body[0]._id.toString()).toBe(reportId.toString());
+    expect(reportsRes.body[0].evidenceImageUrl).toBe('https://example.com/evidence.png');
 
     // Bước 3: Admin duyệt và xử lý báo cáo vi phạm
     const resolveRes = await request(app)
@@ -148,5 +169,18 @@ describe('Integration Test: Reports & Notifications API', () => {
       .get('/api/user/notifications/unread/count')
       .set('Authorization', `Bearer ${userBToken}`);
     expect(countFinal.body.unreadCount).toBe(0);
+  });
+
+  test('Nên gửi báo cáo vi phạm kèm file ảnh bằng chứng (multipart/form-data) thành công', async () => {
+    const reportRes = await request(app)
+      .post('/api/user/reports')
+      .set('Authorization', `Bearer ${userBToken}`)
+      .field('reportedUserId', idC.toString())
+      .field('reason', 'Quấy rối qua cuộc gọi video')
+      .attach('evidenceImage', Buffer.from('mock image data'), 'test.png');
+
+    expect(reportRes.status).toBe(201);
+    expect(reportRes.body.message).toBe('Gửi báo cáo vi phạm thành công');
+    expect(reportRes.body.report.evidenceImageUrl).toBe('https://res.cloudinary.com/mock-cloud/image/upload/v123/evidence-image.png');
   });
 });

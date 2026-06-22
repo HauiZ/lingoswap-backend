@@ -3,7 +3,7 @@ import User from '../../users/entities/User.js';
 import notificationService from '../../notifications/services/notification.service.js';
 
 const createReport = async (reporterId, payload, io) => {
-    const { reportedUserId, matchSessionId, conversationId, reason, evidenceMessageIds } = payload;
+    const { reportedUserId, matchSessionId, conversationId, reason, evidenceMessageIds, evidenceImageUrl } = payload;
     
     if (!reportedUserId || !reason) {
         let error = new Error('Thiếu thông tin bắt buộc để báo cáo');
@@ -18,6 +18,7 @@ const createReport = async (reporterId, payload, io) => {
         conversationId: conversationId || null,
         reason,
         evidenceMessageIds: evidenceMessageIds || [],
+        evidenceImageUrl: evidenceImageUrl || null,
         status: 'pending'
     });
 

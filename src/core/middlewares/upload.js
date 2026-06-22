@@ -26,4 +26,17 @@ const uploadChatImage = multer({
   limits: { fileSize: 5 * 1024 * 1024 }
 });
 
-export { uploadImage, uploadChatImage };
+const evidenceStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'lingoswap/Evidence',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp']
+  }
+});
+
+const uploadEvidenceImage = multer({
+  storage: evidenceStorage,
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit for evidence
+});
+
+export { uploadImage, uploadChatImage, uploadEvidenceImage };

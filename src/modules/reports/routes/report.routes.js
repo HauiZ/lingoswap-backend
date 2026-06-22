@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { createReport } from '../controllers/report.controller.js';
 import { authenticateToken } from '../../../core/middlewares/auth.js';
+import { uploadEvidenceImage } from '../../../core/middlewares/upload.js';
 
 const router = Router();
 
@@ -15,6 +16,25 @@ const router = Router();
  *     requestBody:
  *       required: true
  *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               reportedUserId:
+ *                 type: string
+ *               reason:
+ *                 type: string
+ *               matchSessionId:
+ *                 type: string
+ *               conversationId:
+ *                 type: string
+ *               evidenceMessageIds:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               evidenceImage:
+ *                 type: string
+ *                 format: binary
  *         application/json:
  *           schema:
  *             type: object
@@ -31,10 +51,12 @@ const router = Router();
  *                 type: array
  *                 items:
  *                   type: string
+ *               evidenceImageUrl:
+ *                 type: string
  *     responses:
  *       201:
  *         description: Báo cáo đã được ghi lại thành công
  */
-router.post('/', authenticateToken, createReport);
+router.post('/', authenticateToken, uploadEvidenceImage.single('evidenceImage'), createReport);
 
 export default router;

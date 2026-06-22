@@ -50,6 +50,18 @@ describe('Unit Test: Report Service', () => {
       expect(report.status).toBe('pending');
     });
 
+    test('Nên gửi báo cáo vi phạm kèm hình ảnh bằng chứng thành công', async () => {
+      const payload = {
+        reportedUserId: reportedUser._id,
+        reason: 'Quấy rối qua chat',
+        evidenceImageUrl: 'https://res.cloudinary.com/lingoswap/Evidence/test.jpg'
+      };
+
+      const report = await reportService.createReport(reporter._id, payload, null);
+      expect(report).toBeDefined();
+      expect(report.evidenceImageUrl).toBe(payload.evidenceImageUrl);
+    });
+
     test('Nên báo lỗi khi thiếu thông tin bắt buộc', async () => {
       await expect(
         reportService.createReport(reporter._id, {

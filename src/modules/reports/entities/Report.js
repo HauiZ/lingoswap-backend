@@ -33,6 +33,11 @@ const reportSchema = new mongoose.Schema(
       ref: 'Message'
     }],
 
+    // Hình ảnh bằng chứng quấy rối
+    evidenceImageUrl: {
+      type: String
+    },
+
     status: {
       type: String,
       enum: ['pending', 'investigating', 'resolved', 'dismissed'],

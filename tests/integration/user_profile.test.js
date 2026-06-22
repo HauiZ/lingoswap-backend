@@ -14,7 +14,8 @@ jest.mock('../../src/core/middlewares/upload.js', () => {
   };
   return {
     uploadImage: { single: mockSingle },
-    uploadChatImage: { single: mockSingle }
+    uploadChatImage: { single: mockSingle },
+    uploadEvidenceImage: { single: mockSingle }
   };
 });
 
